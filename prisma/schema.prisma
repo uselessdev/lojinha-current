@@ -1,0 +1,209 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventActions {
+  CREATE_ACCOUNT
+  CREATE_STORE
+
+  CREATE_COLLECTION
+  UPDATE_COLLECTION
+  ARCHIVE_COLLECTION
+  UNARCHIVE_COLLECTION
+  DELETE_COLLECTION
+
+  CREATE_PRODUCT
+  UPDATE_PRODUCT
+  ARCHIVE_PRODUCT
+  UNARCHIVE_PRODUCT
+  DELETE_PRODUCT
+
+  CREATE_KEY
+  REVOKE_KEY
+
+  CREATE_ORDER
+  UPDATE_ORDER
+  ARCHIVE_ORDER
+  EXPIRED_ORDER
+}
+
+model Event {
+  id        String       @id @default(uuid())
+  payload   Json
+  user      String
+  action    EventActions
+  store     String?
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@map("events")
+}
+
+model Collection {
+  id          String  @id @default(uuid())
+  store       String
+  name        String
+  slug        String
+  description String?
+
+  parents  Collection[] @relation("CollectionsToCollections")
+  children Collection[] @relation("CollectionsToCollections")
+  products Product[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("collections")
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  VALIDATION
+  DISABLED
+}
+
+model Product {
+  id            String        @id @default(uuid())
+  store         String
+  status        ProductStatus @default(DRAFT)
+  name          String
+  slug          String
+  description   String?       @db.Text
+  price         Int?
+  originalPrice Int?          @map("original_price")
+  quantity      Int?
+  sku           String?
+
+  collections Collection[]
+  orders      OrderProduct[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("products")
+}
+
+enum OrderStatus {
+  PENDING
+  CREATED
+  PAID
+  SHIPPING
+  CANCELED
+  DONE
+  REFUND
+  REFUNDED
+  EXPIRED
+}
+
+model Order {
+  id            String         @id @default(uuid())
+  store         String
+  customerId    String?
+  addressId     String?
+  price         Int?
+  originalPrice Int?           @map("original_price")
+  status        OrderStatus    @default(PENDING)
+  products      OrderProduct[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  customer Customer? @relation(fields: [customerId], references: [id])
+  address  Address?  @relation(fields: [addressId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderProduct {
+  productId String @map("product_id")
+  orderId   String @map("order_id")
+  quantity  Int
+
+  product Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+
+  @@id([productId, orderId])
+  @@map("order_product")
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  externalId String?  @unique @map("external_id")
+  email      String   @unique
+  stores     String[]
+
+  addresses Address[]
+  orders    Order[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("customers")
+}
+
+model Address {
+  id            String  @id @default(uuid())
+  alias         String?
+  zipcode       String
+  street        String
+  state         String
+  city          String
+  country       String
+  neightborhood String
+  number        String
+  complement    String?
+  customerId    String  @map("customer_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  order    Order[]
+
+  @@index([zipcode])
+  @@map("addresses")
+}
+
+model Email {
+  id      String @id @default(uuid())
+  store   String
+  address String @unique
+
+  storeId Store @relation(fields: [store], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([store, address])
+  @@map("emails")
+}
+
+model Store {
+  id     String  @id @default(uuid())
+  store  String
+  name   String
+  url    String
+  emails Email[]
+  cnpj   String
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([store])
+  @@map("stores")
+}
