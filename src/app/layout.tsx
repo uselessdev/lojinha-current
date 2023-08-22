@@ -1,4 +1,6 @@
 import '~/app/globals.css'
+import { ptBR } from '@clerk/localizations'
+import { ClerkProvider } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 import { Analytics } from "@vercel/analytics/react";
 
@@ -37,9 +39,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
-      <body>{children}</body>
-      <Analytics />
-    </html>
+    <ClerkProvider
+      localization={ptBR}
+      appearance={{
+        variables: {
+          colorPrimary: "#000000",
+        },
+      }}
+    >
+      <html lang="pt-BR">
+        <body>{children}</body>
+        <Analytics />
+      </html>
+    </ClerkProvider>
   )
 }
