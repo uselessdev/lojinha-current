@@ -1,4 +1,4 @@
-import '~/globals.css'
+import '~/app/globals.css'
 import type { Metadata } from 'next'
 import { Analytics } from "@vercel/analytics/react";
 
@@ -38,7 +38,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-[100dvh] bg-gray-50 grid place-items-center">{children}</body>
+      <body>{children}</body>
       <Analytics />
     </html>
   )
