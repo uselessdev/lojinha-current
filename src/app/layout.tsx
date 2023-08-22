@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body className="min-h-[100dvh] bg-gray-50 grid place-items-center">{children}</body>
       <Analytics />
     </html>
