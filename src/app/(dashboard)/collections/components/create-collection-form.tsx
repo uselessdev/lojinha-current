@@ -23,8 +23,13 @@ import { createCollectionAction } from "../actions/create-collection-action";
 import { useUploadThing } from "~/lib/uploadthing";
 import { type CollectionSchema, collectionSchema } from "../schema";
 import { useOrganization, useUser } from "@clerk/nextjs";
+import { type Collection } from "@prisma/client";
 
-export function CreateCollectionForm() {
+type Props = {
+  collections: Collection[];
+};
+
+export function CreateCollectionForm({ collections }: Props) {
   const { user } = useUser();
   const { organization } = useOrganization();
   const { mutate, isLoading } = useAction(createCollectionAction);
@@ -42,6 +47,11 @@ export function CreateCollectionForm() {
   const [selectedFiles, setSelectedFiles] = useState<Array<File>>([]);
   const { startUpload, isUploading } = useUploadThing("collections");
 
+  const options = collections.map((collection) => ({
+    value: collection.id,
+    label: collection.name,
+  }));
+
   const onSubmit = () => {
     mutate(
       {
@@ -57,8 +67,6 @@ export function CreateCollectionForm() {
       },
     );
   };
-
-  console.log({ isLoading, isUploading });
 
   return (
     <Form {...form}>
@@ -139,7 +147,7 @@ export function CreateCollectionForm() {
                 <FormLabel>Coleções</FormLabel>
                 <FormControl>
                   <Autocomplete
-                    options={[]}
+                    options={options}
                     {...field}
                     onChange={({ target }) => {
                       form.setValue(

@@ -35,7 +35,7 @@ export function Autocomplete({
         !selected.find(({ value }) => {
           return value === option.value;
         }) &&
-        (option.label.includes(search) || option.value.includes(search))
+        (option.label.includes(search) || option.value.includes(search)),
     );
   }, [selected, options, value]);
 
@@ -117,12 +117,12 @@ export function Autocomplete({
   });
 
   return (
-    <div className="w-full relative">
-      <div className="w-full bg-white py-1 flex flex-wrap gap-2 border-b">
+    <div className="relative w-full">
+      <div className="flex w-full flex-wrap gap-2 border-b bg-white py-1">
         {selected.map(function (selectedItemRender, index) {
           return (
             <span
-              className="flex max-w-fit rounded-md items-center text-xs font-semibold bg-gray-50 text-gray-500"
+              className="flex max-w-fit items-center rounded-md bg-gray-50 text-xs font-semibold text-gray-500"
               key={`selected-item-${index}`}
               {...getSelectedItemProps({
                 selectedItem: selectedItemRender,
@@ -131,22 +131,22 @@ export function Autocomplete({
             >
               <span className="pl-2 pr-1">{selectedItemRender.label}</span>
               <button
-                className="rounded-e-md hover:bg-gray-100 p-2 cursor-pointer"
+                className="cursor-pointer rounded-e-md p-2 hover:bg-gray-100"
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeSelectedItem(selectedItemRender);
                 }}
               >
-                <XIcon className="w-4 h-4" />
+                <XIcon className="h-4 w-4" />
               </button>
             </span>
           );
         })}
 
-        <div className="w-full flex flex-1 justify-between">
+        <div className="flex w-full flex-1 justify-between">
           <input
-            className="w-full outline-none h-8"
+            className="h-8 w-full outline-none"
             {...getInputProps(getDropdownProps({ preventKeyAction: isOpen }))}
           />
           <button type="button" {...getToggleButtonProps()}>
@@ -156,8 +156,8 @@ export function Autocomplete({
       </div>
 
       <ul
-        className={`w-full min-w-[200px] bg-white border rounded-md p-1 max-w-max absolute transition-all opacity-0 translate-y-4 ${
-          isOpen ? "opacity-100 translate-y-2" : ""
+        className={`absolute z-10 w-full min-w-[200px] max-w-max translate-y-4 rounded-md border bg-white p-1 opacity-0 transition-all ${
+          isOpen ? "translate-y-2 opacity-100" : ""
         }`}
         {...getMenuProps({
           style: {
@@ -171,7 +171,7 @@ export function Autocomplete({
         {items.length <= 0 && value.length > 0 ? (
           <li
             {...getItemProps({ item: { label: value, value }, index: 0 })}
-            className={`px-2 py-1 hover:bg-gray-50 text-sm text-gray-500 font-semibold cursor-pointer rounded-md ${
+            className={`cursor-pointer rounded-md px-2 py-1 text-sm font-semibold text-gray-500 hover:bg-gray-50 ${
               highlightedIndex === 0 ? `bg-gray-50` : ""
             }`}
           >
@@ -183,7 +183,7 @@ export function Autocomplete({
           <li
             key={`${item.value}${index}`}
             {...getItemProps({ item, index })}
-            className={`px-2 py-1 hover:bg-gray-50 text-sm text-gray-500 font-semibold cursor-pointer rounded-md ${
+            className={`cursor-pointer rounded-md px-2 py-1 text-sm font-semibold text-gray-500 hover:bg-gray-50 ${
               highlightedIndex === index ? `bg-gray-50` : ""
             }`}
           >

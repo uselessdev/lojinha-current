@@ -1,7 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { CreateCollectionForm } from "../components/create-collection-form";
+import { db } from "~/lib/database";
+import { auth } from "@clerk/nextjs";
 
-export default function CreateCollectionPage() {
+export default async function CreateCollectionPage() {
+  const { orgId } = auth();
+
+  const collections = await db.collection.findMany({
+    where: {
+      store: String(orgId),
+      deletedAt: null,
+    },
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -9,7 +20,7 @@ export default function CreateCollectionPage() {
       </CardHeader>
 
       <CardContent>
-        <CreateCollectionForm />
+        <CreateCollectionForm collections={collections} />
       </CardContent>
     </Card>
   );
