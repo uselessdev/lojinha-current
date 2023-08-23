@@ -52,7 +52,7 @@ export default function DashboardLayout({
                 <Link
                   key={item.url}
                   href={item.url}
-                  className={clsx(`flex gap-2 items-center font-semibold text-sm text-gray-500 hover:bg-gray-50 px-2 py-2 rounded-md`, { 'bg-gray-50': pathname.startsWith(item.url) })}
+                  className={clsx(`flex gap-2 items-center font-semibold text-sm text-gray-500 hover:bg-gray-50 px-2 py-2 rounded-md`, { 'text-gray-800': pathname.startsWith(item.url) })}
                 >
                   {item.icon} {item.label}
                 </Link>

@@ -56,6 +56,7 @@ model Collection {
   parents  Collection[] @relation("CollectionsToCollections")
   children Collection[] @relation("CollectionsToCollections")
   products Product[]
+  images   Image[]
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
@@ -206,4 +207,16 @@ model Store {
 
   @@index([store])
   @@map("stores")
+}
+
+model Image {
+  id    String @id @default(uuid())
+  store String
+  key   String
+  url   String
+
+  Collection Collection? @relation(fields: [collection], references: [id])
+  collection String?
+
+  @@map("images")
 }

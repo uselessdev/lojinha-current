@@ -1,25 +1,21 @@
-import {
-  HomeIcon,
-  KeyRoundIcon,
-  LayersIcon,
-  LucideIcon,
-  NewspaperIcon,
-  ShoppingCartIcon,
-  TagIcon,
-} from "lucide-react";
-import { ReactElement } from "react";
+import { HomeIcon, LayersIcon } from "lucide-react";
+import { type ReactElement } from "react";
 
-export const menu: Array<{ icon: ReactElement; label: string; url: __next_route_internal_types__.StaticRoutes }> = [
+export const menu: Array<{
+  icon: ReactElement;
+  label: string;
+  url: __next_route_internal_types__.StaticRoutes;
+}> = [
   {
     url: `/dashboard`,
     label: `Página Inicial`,
     icon: <HomeIcon className="text-current" />,
   },
-  // {
-  //   url: `/collections`,
-  //   label: `Coleções`,
-  //   icon: <LayersIcon className="text-current" />,
-  // },
+  {
+    url: `/collections`,
+    label: `Coleções`,
+    icon: <LayersIcon className="text-current" />,
+  },
   // {
   //   url: `/products`,
   //   label: "Produtos",

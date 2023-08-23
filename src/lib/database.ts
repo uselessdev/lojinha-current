@@ -1,16 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import { env } from "~/env.mjs";
-export * from "@prisma/client";
 
-const globalForPrisma = globalThis as { db?: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  db: PrismaClient | undefined;
+};
 
 export const db =
-  globalForPrisma.db ||
+  globalForPrisma.db ??
   new PrismaClient({
     log:
-      env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
-        : ["error"],
+      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 
-if (env.NODE_ENV !== 'production') globalForPrisma.db = db;
+if (env.NODE_ENV !== "production") globalForPrisma.db = db;
