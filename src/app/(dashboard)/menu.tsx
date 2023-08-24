@@ -1,4 +1,4 @@
-import { HomeIcon, LayersIcon } from "lucide-react";
+import { HomeIcon, LayersIcon, NewspaperIcon } from "lucide-react";
 import { type ReactElement } from "react";
 
 export const menu: Array<{
@@ -31,11 +31,11 @@ export const menu: Array<{
   //   label: "Pedidos",
   //   icon: <BoxIcon className="text-current" />,
   // },
-  // {
-  //   url: `/events`,
-  //   label: `Eventos`,
-  //   icon: <NewspaperIcon className="text-current" />,
-  // },
+  {
+    url: `/events`,
+    label: `Eventos`,
+    icon: <NewspaperIcon className="text-current" />,
+  },
   // {
   //   url: `/keys`,
   //   label: `Chaves de API`,
