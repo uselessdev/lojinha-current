@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs";
 import Link from "next/link";
-import { isEmpty } from "remeda";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -10,6 +9,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { db } from "~/lib/database";
+import { ListCollectionsTable } from "./components/list-collections-table";
 
 export default async function CollectionsPage() {
   const { orgId } = auth();
@@ -42,10 +42,14 @@ export default async function CollectionsPage() {
         </Button>
       </CardHeader>
 
-      {isEmpty(collections) ? (
+      {collections.length <= 0 ? (
         <CardContent>
           <p className="text-xs text-gray-500">Nenhuma coleção encontrada.</p>
         </CardContent>
+      ) : null}
+
+      {collections.length > 0 ? (
+        <ListCollectionsTable collections={collections} />
       ) : null}
     </Card>
   );

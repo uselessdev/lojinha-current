@@ -24,6 +24,8 @@ import { useUploadThing } from "~/lib/uploadthing";
 import { type CollectionSchema, collectionSchema } from "../schema";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { type Collection } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { toast } from "~/components/ui/use-toast";
 
 type Props = {
   collections: Collection[];
@@ -33,6 +35,7 @@ export function CreateCollectionForm({ collections }: Props) {
   const { user } = useUser();
   const { organization } = useOrganization();
   const { mutate, isLoading } = useAction(createCollectionAction);
+  const router = useRouter();
 
   const form = useForm<CollectionSchema>({
     mode: "all",
@@ -62,8 +65,24 @@ export function CreateCollectionForm({ collections }: Props) {
       {
         onSuccess: async (data) => {
           await startUpload(selectedFiles, { collection: data?.id as string });
+
+          toast({
+            title: "Nova coleção",
+            description: `A coleção ${data?.name} foi adicionada.`,
+            className: "shadow-none p-3",
+          });
+
+          router.refresh();
+          router.push("/collections");
         },
-        onError: (error) => console.log(error),
+        onError: () => {
+          toast({
+            title: "Erro",
+            description:
+              "Ocorreu um erro ao tentar criar sua coleção, tente novamente.",
+            className: "shadow-none p-3",
+          });
+        },
       },
     );
   };
@@ -179,7 +198,7 @@ export function CreateCollectionForm({ collections }: Props) {
           )}
         />
 
-        <Button type="submit" size="sm">
+        <Button type="submit" size="sm" disabled={isUploading || isLoading}>
           {isUploading || isLoading ? "Criando..." : "Criar Coleção"}
         </Button>
       </form>
