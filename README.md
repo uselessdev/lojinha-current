@@ -2,7 +2,6 @@
 
 ## TODO
 
-- [platform:events] Add Events
 - [platform:settings] Add API keys
 - [platform:settings] Add company settings
 - [platform:products] Add products
