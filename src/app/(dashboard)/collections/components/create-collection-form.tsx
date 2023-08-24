@@ -48,7 +48,10 @@ export function CreateCollectionForm({ collections }: Props) {
   });
 
   const [selectedFiles, setSelectedFiles] = useState<Array<File>>([]);
-  const { startUpload, isUploading } = useUploadThing("collections");
+  const { startUpload, isUploading } = useUploadThing("collections", {
+    onUploadError: (error) => console.log(error),
+    onClientUploadComplete: console.log,
+  });
 
   const options = collections.map((collection) => ({
     value: collection.id,
@@ -138,6 +141,7 @@ export function CreateCollectionForm({ collections }: Props) {
               <FormLabel>Imagem</FormLabel>
               <FormControl>
                 <InputUpload
+                  multiple
                   files={selectedFiles}
                   onRemoveFile={(file) => {
                     const isString = typeof file === "string";

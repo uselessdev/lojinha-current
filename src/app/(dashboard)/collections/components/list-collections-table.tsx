@@ -34,6 +34,25 @@ import {
 } from "~/components/ui/table";
 import { formatter } from "~/lib/utils";
 import NextImage from "next/image";
+import { useAction } from "~/lib/use-action";
+import { archiveCollectionAction } from "../actions/archive-collection-action";
+import { useOrganization, useUser } from "@clerk/nextjs";
+import { toast } from "~/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { restoreCollectionAction } from "../actions/restore-collection-action";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import { useDisclosure } from "~/lib/use-disclosure";
+import { destroyCollectionAction } from "../actions/destroy-collection-action";
 
 type CollectionWithParentsAndImages = Collection & {
   parents: Collection[];
@@ -47,6 +66,17 @@ type Props = {
 const column = createColumnHelper<CollectionWithParentsAndImages>();
 
 export function ListCollectionsTable({ collections }: Props) {
+  const { user } = useUser();
+  const { organization } = useOrganization();
+  const router = useRouter();
+  const [updating, setUpdating] = useState<string>();
+
+  const archive = useAction(archiveCollectionAction);
+  const restore = useAction(restoreCollectionAction);
+  const destroy = useAction(destroyCollectionAction);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const columns = [
     column.accessor(({ name, deletedAt }) => ({ name, deletedAt }), {
       header: "Coleção",
@@ -130,25 +160,30 @@ export function ListCollectionsTable({ collections }: Props) {
                   <>
                     <DropdownMenuItem
                       className="flex gap-2"
-                      // onClick={() => {
-                      //   setRowID(collection.id);
+                      onClick={() => {
+                        setUpdating(collection.id);
 
-                      //   restore.mutate(
-                      //     { id: collection.id, user: user?.id as string },
-                      //     {
-                      //       onSuccess: () => {
-                      //         toast({
-                      //           title: "Coleção restaurada.",
-                      //           description: `A coleção ${collection.name} foi restaurada.`,
-                      //           className: "shadow-none p-3",
-                      //         });
+                        restore.mutate(
+                          {
+                            id: collection.id,
+                            user: String(user?.id),
+                            store: String(organization?.id),
+                          },
+                          {
+                            onSuccess: () => {
+                              toast({
+                                title: "Coleção restaurada.",
+                                description: `A coleção ${collection.name} foi restaurada.`,
+                                className: "shadow-none p-3",
+                              });
 
-                      //         router.refresh();
-                      //         setRowID(undefined);
-                      //       },
-                      //     },
-                      //   );
-                      // }}
+                              setUpdating(undefined);
+
+                              router.refresh();
+                            },
+                          },
+                        );
+                      }}
                     >
                       <ArchiveRestoreIcon className="h-4 w-4 text-gray-500" />
                       Restaurar
@@ -158,10 +193,10 @@ export function ListCollectionsTable({ collections }: Props) {
 
                     <DropdownMenuItem
                       className="group flex gap-2 text-red-500"
-                      // onClick={() => {
-                      //   setRowID(collection.id);
-                      //   setIsOpen(true);
-                      // }}
+                      onClick={() => {
+                        setUpdating(collection.id);
+                        onOpen();
+                      }}
                     >
                       <Trash2Icon className="h-4 w-4 text-red-500" />
                       <span className="group-hover:text-red-500">Excluir</span>
@@ -170,28 +205,29 @@ export function ListCollectionsTable({ collections }: Props) {
                 ) : (
                   <DropdownMenuItem
                     className="flex gap-2"
-                    // onClick={() => {
-                    //   setRowID(collection.id);
+                    onClick={() => {
+                      setUpdating(collection.id);
 
-                    //   archive.mutate(
-                    //     {
-                    //       id: collection.id,
-                    //       user: user?.id as string,
-                    //     },
-                    //     {
-                    //       onSuccess: () => {
-                    //         toast({
-                    //           title: "Coleção arquivada.",
-                    //           description: `A coleção ${collection.name} foi arquivada.`,
-                    //           className: "shadow-none p-3",
-                    //         });
+                      archive.mutate(
+                        {
+                          id: collection.id,
+                          user: String(user?.id),
+                          store: String(organization?.id),
+                        },
+                        {
+                          onSuccess: () => {
+                            toast({
+                              title: "Coleção arquivada.",
+                              description: `A coleção ${collection.name} foi arquivada.`,
+                              className: "shadow-none p-3",
+                            });
 
-                    //         router.refresh();
-                    //         setRowID(undefined);
-                    //       },
-                    //     },
-                    //   );
-                    // }}
+                            setUpdating(undefined);
+                            router.refresh();
+                          },
+                        },
+                      );
+                    }}
                   >
                     <ArchiveIcon className="h-3 w-3 text-gray-500" />
                     Arquivar
@@ -212,43 +248,88 @@ export function ListCollectionsTable({ collections }: Props) {
   });
 
   return (
-    <Table className="mb-6">
-      <TableHeader>
-        {table.getHeaderGroups().map((group) => (
-          <TableRow key={group.id} className="border-0 hover:bg-transparent">
-            {group.headers.map((header) => (
-              <TableHead key={header.id} className="uppercase">
-                {flexRender(
-                  header.column.columnDef.header,
-                  header.getContext(),
-                )}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
+    <>
+      <Table className="mb-6">
+        <TableHeader>
+          {table.getHeaderGroups().map((group) => (
+            <TableRow key={group.id} className="border-0 hover:bg-transparent">
+              {group.headers.map((header) => (
+                <TableHead key={header.id} className="uppercase">
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
 
-      <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow
-            key={row.id}
-            // data-state={
-            //   row.getIsSelected()
-            //     ? "selected"
-            //     : (archive.isLoading || restore.isLoading) &&
-            //       row.original.id === rowID
-            //     ? "loading"
-            //     : ""
-            // }
-          >
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              data-state={
+                (archive.isLoading || restore.isLoading) &&
+                row.original.id === updating
+                  ? "loading"
+                  : ""
+              }
+            >
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <AlertDialog open={isOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir coleção</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa coleção será excluida de forma permanente e não poderá ser
+              recuperada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={onClose}>
+              Não quero excluir
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              disabled={destroy.isLoading}
+              onClick={() => {
+                destroy.mutate(
+                  {
+                    id: String(updating),
+                    user: String(user?.id),
+                    store: String(organization?.id),
+                  },
+                  {
+                    onSuccess: () => {
+                      toast({
+                        title: "Coleção excluida.",
+                        description: `A coleção foi excluida.`,
+                        className: "shadow-none p-3",
+                      });
+
+                      router.refresh();
+                      setUpdating(undefined);
+                      onClose();
+                    },
+                  },
+                );
+              }}
+            >
+              {destroy.isLoading ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -10,10 +10,12 @@ const schema = z.object({
 });
 
 export const fileRouter = {
-  collections: f({ image: { maxFileSize: "2MB" } })
+  collections: f({ image: { maxFileSize: "2MB", maxFileCount: 10 } })
     .input(schema)
     .middleware(({ input }) => {
       const { orgId } = auth();
+
+      console.log(`starting upload for: ${orgId}`);
 
       return { collection: input.collection, store: orgId };
     })
