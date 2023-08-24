@@ -3,6 +3,7 @@
 import { type Collection } from "@prisma/client";
 import { type Schema, schema } from "../schema";
 import { db } from "~/lib/database";
+import { utapi } from "uploadthing/server";
 
 export async function destroyCollectionAction(
   data: Schema,
@@ -28,6 +29,9 @@ export async function destroyCollectionAction(
         id,
         store,
       },
+      include: {
+        images: true,
+      },
     });
 
     if (collection) {
@@ -39,6 +43,18 @@ export async function destroyCollectionAction(
           user,
         },
       });
+
+      if (collection.images.length > 0) {
+        await db.image.deleteMany({
+          where: {
+            id: {
+              in: collection.images.map(({ id }) => id),
+            },
+          },
+        });
+
+        await utapi.deleteFiles(collection.images.map(({ key }) => key));
+      }
     }
 
     return { status: "success" };
