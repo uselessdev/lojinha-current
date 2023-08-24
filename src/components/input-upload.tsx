@@ -35,6 +35,7 @@ export function InputUpload({
         },
       });
     });
+    // eslint-disable-next-line
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

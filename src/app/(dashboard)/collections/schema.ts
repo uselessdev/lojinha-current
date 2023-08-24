@@ -11,3 +11,11 @@ export const collectionSchema = z.object({
 });
 
 export type CollectionSchema = z.infer<typeof collectionSchema>;
+
+export const schema = z.object({
+  id: z.string().uuid("ID da coleção é inválido"),
+  user: z.string().min(1, "ID do usuário é inválido"),
+  store: z.string().min(1, "ID da loja é inválido"),
+});
+
+export type Schema = z.infer<typeof schema>;
