@@ -31,18 +31,24 @@ export default function DashboardLayout({
   return (
     <>
       {!store.organization ? (
-        <section className="grid w-full h-screen place-items-center">
+        <section className="grid h-screen w-full place-items-center">
           <CreateOrganization afterCreateOrganizationUrl="/dashboard" />
         </section>
       ) : null}
 
       {store.organization ? (
-        <div className="w-full min-h-screen grid grid-cols-[300px_1fr]">
+        <div className="grid min-h-screen w-full grid-cols-[300px_1fr]">
           <aside className="grid grid-rows-[80px_1fr]">
-            <header className="px-6 flex flex-col h-20 justify-center">
+            <header className="flex h-20 flex-col justify-center px-6">
               <h1 className="text-xs font-semibold text-gray-700">
                 <Link href="/">
-                  <Image src="/android-chrome-512x512.png" alt="lojinha.dev" width={24} height={24} className="w-6 h-w-6" />
+                  <Image
+                    src="/android-chrome-512x512.png"
+                    alt="lojinha.dev"
+                    width={24}
+                    height={24}
+                    className="h-w-6 w-6"
+                  />
                 </Link>
               </h1>
             </header>
@@ -52,7 +58,10 @@ export default function DashboardLayout({
                 <Link
                   key={item.url}
                   href={item.url}
-                  className={clsx(`flex gap-2 items-center font-semibold text-sm text-gray-500 hover:bg-gray-50 px-2 py-2 rounded-md`, { 'text-gray-800': pathname.startsWith(item.url) })}
+                  className={clsx(
+                    `flex items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold text-gray-400 hover:bg-gray-50`,
+                    { "text-gray-800": pathname.startsWith(item.url) },
+                  )}
                 >
                   {item.icon} {item.label}
                 </Link>
@@ -60,7 +69,7 @@ export default function DashboardLayout({
             </nav>
           </aside>
 
-          <section className="w-full min-h-screen grid grid-rows-[80px_1fr]">
+          <section className="grid min-h-screen w-full grid-rows-[80px_1fr]">
             <PageHeader>
               <OrganizationSwitcher
                 hidePersonal

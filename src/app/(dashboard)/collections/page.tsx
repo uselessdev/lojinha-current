@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs";
 import Link from "next/link";
-import { isEmpty } from "remeda";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -10,6 +9,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { db } from "~/lib/database";
+import { ListCollectionsTable } from "./components/list-collections-table";
 
 export default async function CollectionsPage() {
   const { orgId } = auth();
@@ -29,8 +29,8 @@ export default async function CollectionsPage() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <div>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+        <div className="space-y-1.5">
           <CardTitle>Coleções</CardTitle>
           <CardDescription>
             Coleções são utilizadas para agrupar produtos ou outras coleções.
@@ -42,10 +42,14 @@ export default async function CollectionsPage() {
         </Button>
       </CardHeader>
 
-      {isEmpty(collections) ? (
+      {collections.length <= 0 ? (
         <CardContent>
           <p className="text-xs text-gray-500">Nenhuma coleção encontrada.</p>
         </CardContent>
+      ) : null}
+
+      {collections.length > 0 ? (
+        <ListCollectionsTable collections={collections} />
       ) : null}
     </Card>
   );
