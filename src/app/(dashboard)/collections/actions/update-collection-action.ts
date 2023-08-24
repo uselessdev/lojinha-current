@@ -5,9 +5,9 @@ import { collectionSchema, type CollectionSchema } from "../schema";
 import { type Collection } from "@prisma/client";
 import { db } from "~/lib/database";
 
-export async function createCollectionAction(
+export async function updateCollectionAction(
   data: CollectionSchema,
-  // @ts-expect-error actions has conflict with es5
+  // @ts-expect-error action return
 ): ActionReturnType<Collection> {
   const payload = collectionSchema.safeParse(data);
 
@@ -22,34 +22,38 @@ export async function createCollectionAction(
   }
 
   try {
-    const { store, user, parents, ...data } = payload.data;
+    const { user, store, id, ...data } = payload.data;
 
-    const collection = await db.collection.create({
-      data: {
+    const collection = await db.collection.update({
+      where: {
+        id,
         store,
+      },
+      data: {
         name: data.name,
         slug: data.slug,
         description: data.description,
         parents: {
-          connect: parents?.map((id) => ({ id })),
+          set: data.parents?.map((id) => ({ id })),
         },
+        updatedAt: new Date(),
       },
     });
 
     if (collection) {
       await db.event.create({
         data: {
+          action: "UPDATE_COLLECTION",
+          payload: { ...data, id },
           user,
           store,
-          action: "CREATE_COLLECTION",
-          payload: data,
         },
       });
     }
 
     return { status: "success", data: collection };
-  } catch (error) {
-    console.error("create collection failed: ", error);
-    return { status: "error", error: (error as Error).message };
+  } catch (err) {
+    console.error(`update collection failed: `, err);
+    return { status: "error", error: (err as Error).message };
   }
 }

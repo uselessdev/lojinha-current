@@ -9,8 +9,8 @@ import { Trash2Icon } from "lucide-react";
 type Props = {
   name?: string;
   multiple?: boolean;
-  files?: File[];
-  onRemoveFile?: (file: File) => void;
+  files?: (File | string)[];
+  onRemoveFile?: (file: File | string) => void;
   onChange: (event: {
     target: { name: string; files: File[]; value: File[] };
   }) => void;
@@ -66,30 +66,38 @@ export function InputUpload({
 
         {files.length > 0 ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
-            {files.map((file: File) => (
-              <picture key={file.name} className="relative">
-                {/* eslint-disable-next-line */}
-                <img
-                  src={URL.createObjectURL(file)}
-                  className="h-40 w-full rounded-sm object-cover object-center"
-                />
+            {files.map((file: File | string) => {
+              const isString = typeof file === "string";
 
-                <Button
-                  size="icon"
-                  className="absolute bottom-2 right-2"
-                  variant="ghost"
-                  onClick={(event) => {
-                    event.stopPropagation();
-
-                    if (onRemoveFile) {
-                      onRemoveFile(file);
-                    }
-                  }}
+              return (
+                <picture
+                  key={isString ? file : file.name}
+                  className="group relative"
                 >
-                  <Trash2Icon className="h-4 w-4" />
-                </Button>
-              </picture>
-            ))}
+                  {/* eslint-disable-next-line */}
+                  <img
+                    src={isString ? file : URL.createObjectURL(file)}
+                    className="h-40 w-full rounded-sm object-cover object-center"
+                  />
+
+                  <Button
+                    size="icon"
+                    className="absolute bottom-2 right-2 h-6 w-6 bg-red-400/40"
+                    variant="destructive"
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+
+                      if (onRemoveFile) {
+                        onRemoveFile(file);
+                      }
+                    }}
+                  >
+                    <Trash2Icon className="h-3 w-3" />
+                  </Button>
+                </picture>
+              );
+            })}
           </div>
         ) : null}
       </div>

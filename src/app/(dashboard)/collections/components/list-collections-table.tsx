@@ -121,7 +121,7 @@ export function ListCollectionsTable({ collections }: Props) {
 
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild className="flex gap-2">
-                  <Link href="/collections">
+                  <Link href={`/collections/${collection.id}`}>
                     <PenIcon className="h-3 w-3" /> Editar
                   </Link>
                 </DropdownMenuItem>

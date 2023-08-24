@@ -29,8 +29,8 @@ export default async function CollectionsPage() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <div>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+        <div className="space-y-1.5">
           <CardTitle>Coleções</CardTitle>
           <CardDescription>
             Coleções são utilizadas para agrupar produtos ou outras coleções.

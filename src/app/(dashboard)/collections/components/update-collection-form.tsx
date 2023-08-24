@@ -19,30 +19,41 @@ import { Editor } from "~/components/editor";
 import { InputUpload } from "~/components/input-upload";
 import { useState } from "react";
 import { useAction } from "~/lib/use-action";
-import { createCollectionAction } from "../actions/create-collection-action";
 import { useUploadThing } from "~/lib/uploadthing";
 import { type CollectionSchema, collectionSchema } from "../schema";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import { type Collection } from "@prisma/client";
+import { type Image, type Collection } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { toast } from "~/components/ui/use-toast";
+import { updateCollectionAction } from "../actions/update-collection-action";
+import { deleteImagesAction } from "../actions/delete-images-action";
+
+type CollectionWithParentAndImage = Collection & {
+  parents: Collection[];
+  images: Image[];
+};
 
 type Props = {
+  collection: CollectionWithParentAndImage;
   collections: Collection[];
 };
 
-export function CreateCollectionForm({ collections }: Props) {
+export function UpdateCollectionForm({ collections, collection }: Props) {
   const { user } = useUser();
   const { organization } = useOrganization();
-  const { mutate, isLoading } = useAction(createCollectionAction);
+  const { mutate, isLoading } = useAction(updateCollectionAction);
+  const images = useAction(deleteImagesAction);
   const router = useRouter();
 
   const form = useForm<CollectionSchema>({
     mode: "all",
     defaultValues: {
+      id: collection.id,
+      name: collection.name,
+      slug: collection.slug,
+      description: collection.description ?? "",
       store: organization?.id,
       user: user?.id,
-      name: "",
     },
     resolver: zodResolver(collectionSchema),
   });
@@ -55,7 +66,14 @@ export function CreateCollectionForm({ collections }: Props) {
     label: collection.name,
   }));
 
+  const selected = collection.parents.map((collection) => ({
+    value: collection.id,
+    label: collection.name,
+  }));
+
   const onSubmit = () => {
+    console.log(form.getValues());
+
     mutate(
       {
         ...form.getValues(),
@@ -67,8 +85,8 @@ export function CreateCollectionForm({ collections }: Props) {
           await startUpload(selectedFiles, { collection: data?.id as string });
 
           toast({
-            title: "Nova coleção",
-            description: `A coleção ${data?.name} foi adicionada.`,
+            title: "Coleção Alterada",
+            description: `A coleção ${data?.name} foi alterada.`,
             className: "shadow-none p-3",
           });
 
@@ -79,7 +97,7 @@ export function CreateCollectionForm({ collections }: Props) {
           toast({
             title: "Erro",
             description:
-              "Ocorreu um erro ao tentar criar sua coleção, tente novamente.",
+              "Ocorreu um erro ao tentar alterar sua coleção, tente novamente.",
             className: "shadow-none p-3",
           });
         },
@@ -138,9 +156,29 @@ export function CreateCollectionForm({ collections }: Props) {
               <FormLabel>Imagem</FormLabel>
               <FormControl>
                 <InputUpload
-                  files={selectedFiles}
+                  files={[
+                    ...collection.images.map((image) => image.url),
+                    ...selectedFiles,
+                  ]}
                   onRemoveFile={(file) => {
                     const isString = typeof file === "string";
+
+                    if (isString) {
+                      const image = collection.images.find(
+                        (i) => file === i.url,
+                      );
+
+                      images.mutate(
+                        {
+                          id: image?.id ?? "",
+                          key: image?.key ?? "",
+                          store: String(organization?.id),
+                        },
+                        {
+                          onSuccess: () => router.refresh(),
+                        },
+                      );
+                    }
 
                     if (!isString) {
                       setSelectedFiles((files) =>
@@ -164,14 +202,14 @@ export function CreateCollectionForm({ collections }: Props) {
         <FormField
           control={form.control}
           name="parents"
-          render={({ field }) => {
+          render={() => {
             return (
               <FormItem>
                 <FormLabel>Coleções</FormLabel>
                 <FormControl>
                   <Autocomplete
                     options={options}
-                    {...field}
+                    defaultSelected={selected}
                     onChange={({ target }) => {
                       form.setValue(
                         "parents",
@@ -196,14 +234,14 @@ export function CreateCollectionForm({ collections }: Props) {
           render={({ field }) => (
             <Editor
               label="Descrição"
-              {...field}
+              initialValue={field.value}
               onChange={({ html }) => form.setValue("description", html)}
             />
           )}
         />
 
         <Button type="submit" size="sm" disabled={isUploading || isLoading}>
-          {isUploading || isLoading ? "Criando..." : "Criar Coleção"}
+          {isUploading || isLoading ? "Salvando..." : "Alterar Coleção"}
         </Button>
       </form>
     </Form>
