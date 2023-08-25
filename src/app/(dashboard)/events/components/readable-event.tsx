@@ -17,7 +17,8 @@ export function ReadableEvent(props: {
 
   return (
     <p>
-      {user?.publicUserData.firstName} {getAction(props.action)}{" "}
+      {user ? user?.publicUserData.firstName : `🤖 ${props.user}`}{" "}
+      {getAction(props.action)}{" "}
       {intlFormatDistance(props.createdAt, new Date(), { locale: "pt-BR" })}
     </p>
   );

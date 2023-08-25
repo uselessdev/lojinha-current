@@ -24,8 +24,6 @@ export default async function EventsPage() {
     },
   });
 
-  console.log(events);
-
   return (
     <Card className="pb-6">
       <CardHeader>
