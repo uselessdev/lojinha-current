@@ -7,7 +7,6 @@ import { db } from "~/lib/database";
 
 export async function updateCollectionAction(
   data: CollectionSchema,
-  // @ts-expect-error action return
 ): ActionReturnType<Collection> {
   const payload = collectionSchema.safeParse(data);
 

@@ -38,7 +38,6 @@ const schema = z.object({
 
 export async function createApiKeyAction(
   data: z.infer<typeof schema>,
-  // @ts-expect-error action return type
 ): ActionReturnType<string> {
   const input = schema.safeParse(data);
 

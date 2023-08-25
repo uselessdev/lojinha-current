@@ -3,6 +3,7 @@ import {
   KeyRoundIcon,
   LayersIcon,
   NewspaperIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { type ReactElement } from "react";
 
@@ -46,11 +47,10 @@ export const menu: Array<{
     label: `Eventos`,
     icon: <NewspaperIcon className="text-current" />,
   },
-
-  // {
-  //   url: `/settings`,
-  //   label: `Configurações`,
-  //   disabled: true,
-  //   icon: <SettingsIcon className="text-current" />,
-  // },
+  {
+    url: `/settings`,
+    label: `Configurações`,
+    // disabled: true,
+    icon: <SettingsIcon className="text-current" />,
+  },
 ];

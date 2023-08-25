@@ -11,6 +11,9 @@ dependencies:
   '@clerk/nextjs':
     specifier: ^4.23.2
     version: 4.23.2(next@13.4.19)(react-dom@18.2.0)(react@18.2.0)
+  '@fnando/cnpj':
+    specifier: ^1.0.2
+    version: 1.0.2
   '@hookform/resolvers':
     specifier: ^3.2.0
     version: 3.2.0(react-hook-form@7.45.4)
@@ -319,6 +322,10 @@ packages:
 
   /@floating-ui/utils@0.1.1:
     resolution: {integrity: sha512-m0G6wlnhm/AX0H12IOWtK8gASEMffnX08RtKkCgTdHb9JpHKGloI7icFfLg9ZmQeavcvR0PKmzxClyuFPSjKWw==}
+    dev: false
+
+  /@fnando/cnpj@1.0.2:
+    resolution: {integrity: sha512-U0r8Mu55rvEDfDIzo1j6szZHHcIZVKg9PKCHvewfHrmYDNDuCt2zjp6TMMI0oIg9hh9fJQqAavzLxMSKHW/W7w==}
     dev: false
 
   /@hookform/resolvers@3.2.0(react-hook-form@7.45.4):
