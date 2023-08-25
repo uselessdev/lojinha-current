@@ -27,7 +27,6 @@ const revokeSchema = z.object({
 
 export async function revokeApiKeyAction(
   data: z.infer<typeof revokeSchema>,
-  // @ts-expect-error action
 ): ActionReturnType<string> {
   const input = revokeSchema.safeParse(data);
 

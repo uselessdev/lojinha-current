@@ -12,7 +12,6 @@ export async function deleteImagesAction({
   key: string;
   id: string;
   store: string;
-  // @ts-expect-error action return type
 }): ActionReturnType<string> {
   try {
     const result = await utapi.deleteFiles(key);

@@ -7,7 +7,6 @@ import { db } from "~/lib/database";
 
 export async function createCollectionAction(
   data: CollectionSchema,
-  // @ts-expect-error actions has conflict with es5
 ): ActionReturnType<Collection> {
   const payload = collectionSchema.safeParse(data);
 

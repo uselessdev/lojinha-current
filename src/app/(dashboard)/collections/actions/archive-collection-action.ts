@@ -3,10 +3,10 @@
 import { type Collection } from "@prisma/client";
 import { type Schema, schema } from "../schema";
 import { db } from "~/lib/database";
+import { type ActionReturnType } from "~/lib/use-action";
 
 export async function archiveCollectionAction(
   data: Schema,
-  // @ts-expect-error action type
 ): ActionReturnType<Collection> {
   const payload = schema.safeParse(data);
 

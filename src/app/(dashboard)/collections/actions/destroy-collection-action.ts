@@ -4,10 +4,10 @@ import { type Collection } from "@prisma/client";
 import { type Schema, schema } from "../schema";
 import { db } from "~/lib/database";
 import { utapi } from "uploadthing/server";
+import { type ActionReturnType } from "~/lib/use-action";
 
 export async function destroyCollectionAction(
   data: Schema,
-  // @ts-expect-error action type
 ): ActionReturnType<Collection> {
   const payload = schema.safeParse(data);
 
