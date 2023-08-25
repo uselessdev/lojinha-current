@@ -35,6 +35,29 @@ export const fileRouter = {
         `connect image: ${file.key} to collection: ${metadata.collection}`,
       );
     }),
+  products: f({ image: { maxFileSize: "2MB", maxFileCount: 10 } })
+    .input(z.object({ product: z.string().uuid() }))
+    .middleware(({ input }) => {
+      const { orgId } = auth();
+
+      console.log(`starting upload for: ${orgId}`);
+
+      return { product: input.product, store: orgId };
+    })
+    .onUploadComplete(async ({ file, metadata }) => {
+      console.log(`upload completed. key: ${file.key}`);
+
+      await db.image.create({
+        data: {
+          key: file.key,
+          url: file.url,
+          store: metadata.store as string,
+          product: metadata.product,
+        },
+      });
+
+      console.log(`connect image: ${file.key} to product: ${metadata.product}`);
+    }),
 } satisfies FileRouter;
 
 export type FileRouterLojinha = typeof fileRouter;

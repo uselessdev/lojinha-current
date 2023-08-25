@@ -72,8 +72,6 @@ export function UpdateCollectionForm({ collections, collection }: Props) {
   }));
 
   const onSubmit = () => {
-    console.log(form.getValues());
-
     mutate(
       {
         ...form.getValues(),

@@ -4,6 +4,7 @@ import {
   LayersIcon,
   NewspaperIcon,
   SettingsIcon,
+  TagIcon,
 } from "lucide-react";
 import { type ReactElement } from "react";
 
@@ -22,11 +23,11 @@ export const menu: Array<{
     label: `Coleções`,
     icon: <LayersIcon className="text-current" />,
   },
-  // {
-  //   url: `/products`,
-  //   label: "Produtos",
-  //   icon: <TagIcon className="text-current" />,
-  // },
+  {
+    url: `/products`,
+    label: "Produtos",
+    icon: <TagIcon className="text-current" />,
+  },
   // {
   //   url: `/carts`,
   //   label: "Carrinhos",

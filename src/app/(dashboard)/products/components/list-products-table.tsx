@@ -1,21 +1,13 @@
 "use client";
 
+import * as React from "react";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { type Collection, type Image } from "@prisma/client";
-import { Badge } from "~/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { Button } from "~/components/ui/button";
+import NextImage from "next/image";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
@@ -24,6 +16,15 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import Link from "next/link";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -33,75 +34,58 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { formatter } from "~/lib/utils";
-import NextImage from "next/image";
-import { useAction } from "~/lib/use-action";
-import { archiveCollectionAction } from "../actions/archive-collection-action";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { toast } from "~/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { restoreCollectionAction } from "../actions/restore-collection-action";
-import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogCancel,
 } from "~/components/ui/alert-dialog";
+import { type Collection, type Image, type Product } from "@prisma/client";
+import { useAction } from "~/lib/use-action";
+import { archiveProductAction } from "../actions/archive-product-action";
+import { restoreProductAction } from "../actions/restore-product-action";
+import { destroyProductAction } from "../actions/destroy-product-action";
 import { useDisclosure } from "~/lib/use-disclosure";
-import { destroyCollectionAction } from "../actions/destroy-collection-action";
 
-type CollectionWithParentsAndImages = Collection & {
-  parents: Collection[];
+type ProductWithCollection = Product & {
+  collections: Collection[];
   images: Image[];
 };
 
 type Props = {
-  collections: CollectionWithParentsAndImages[];
+  products: ProductWithCollection[];
 };
 
-const column = createColumnHelper<CollectionWithParentsAndImages>();
+const column = createColumnHelper<ProductWithCollection>();
 
-export function ListCollectionsTable({ collections }: Props) {
-  const { user } = useUser();
+export function ListProductsTable({ products }: Props) {
   const { organization } = useOrganization();
+  const { user } = useUser();
   const router = useRouter();
-  const [updating, setUpdating] = useState<string>();
+  const [updating, setUpdating] = React.useState<string>();
+  const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const archive = useAction(archiveCollectionAction);
-  const restore = useAction(restoreCollectionAction);
-  const destroy = useAction(destroyCollectionAction);
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const archive = useAction(archiveProductAction);
+  const restore = useAction(restoreProductAction);
+  const destroy = useAction(destroyProductAction);
 
   const columns = [
     column.accessor(({ name, deletedAt }) => ({ name, deletedAt }), {
-      header: "Coleção",
+      header: "Produto",
       cell(props) {
         const { name, deletedAt } = props.getValue();
 
         return (
           <div className="flex items-center gap-2">
-            {deletedAt ? <Badge variant="outline">Arquivada</Badge> : null}
-
+            {deletedAt ? <Badge variant="outline">Arquivado</Badge> : null}
             <p className="font-medium">{name}</p>
-          </div>
-        );
-      },
-    }),
-    column.accessor("parents", {
-      header: "",
-      cell(props) {
-        const parents = props.getValue();
-
-        return (
-          <div className="flex gap-2">
-            {parents.map((parent) => (
-              <Badge key={parent.id}>{parent.name}</Badge>
-            ))}
           </div>
         );
       },
@@ -117,7 +101,7 @@ export function ListCollectionsTable({ collections }: Props) {
               <NextImage
                 src={image.url}
                 key={image.id}
-                alt="Imagem adicionanda nesta coleção."
+                alt="Imagem adicionanda neste produto."
                 width={40}
                 height={40}
                 className="h-10 w-10 rounded-md object-cover object-center"
@@ -127,58 +111,95 @@ export function ListCollectionsTable({ collections }: Props) {
         );
       },
     }),
-    column.accessor("createdAt", {
-      header: "Criada em",
+    column.accessor("collections", {
+      header: "Coleções",
       cell(props) {
-        return formatter.date(props.getValue());
+        const collections = props.getValue();
+
+        return (
+          <div className="flex flex-wrap gap-2">
+            {collections.map((collection) => (
+              <Badge
+                className="cursor-pointer bg-gray-100 text-gray-600 hover:bg-gray-200"
+                key={collection.id}
+              >
+                <Link href={`/collections/${collection.id}`}>
+                  {collection.name}
+                </Link>
+              </Badge>
+            ))}
+          </div>
+        );
       },
     }),
+    column.accessor("price", {
+      header: "Preço (R$)",
+      cell(props) {
+        const price = props.getValue();
+
+        if (price) {
+          return formatter.currency(price);
+        }
+      },
+    }),
+    column.accessor("originalPrice", {
+      header: "Preço Original (R$)",
+      cell(props) {
+        const price = props.getValue();
+
+        if (price) {
+          return formatter.currency(price);
+        }
+      },
+    }),
+    column.accessor("quantity", {
+      header: "Quantidade",
+    }),
     column.accessor(({ id, deletedAt }) => ({ id, deletedAt }), {
-      id: "actions",
+      id: "action",
       header: "",
-      cell: ({ row }) => {
-        const collection = row.original;
+      cell({ row }) {
+        const product = row.original;
 
         return (
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <span className="sr-only">abrir menu</span>
+                <Button variant="ghost">
+                  <span className="sr-only">Abrir Menu</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild className="flex gap-2">
-                  <Link href={`/collections/${collection.id}`}>
+                  <Link href={`/products/${product.id}`}>
                     <PenIcon className="h-3 w-3" /> Editar
                   </Link>
                 </DropdownMenuItem>
 
-                {collection.deletedAt ? (
+                {product.deletedAt ? (
                   <DropdownMenuItem
                     className="flex gap-2"
                     onClick={() => {
-                      setUpdating(collection.id);
+                      setUpdating(product.id);
 
                       restore.mutate(
                         {
-                          id: collection.id,
-                          user: String(user?.id),
+                          id: product.id,
                           store: String(organization?.id),
+                          user: String(user?.id),
                         },
                         {
-                          onSuccess: () => {
+                          onSuccess(data) {
                             toast({
-                              title: "Coleção restaurada.",
-                              description: `A coleção ${collection.name} foi restaurada.`,
+                              title: "Produto restaurado.",
+                              description: `O produto ${data?.name} foi restaurado.`,
                               className: "shadow-none p-3",
                             });
 
-                            setUpdating(undefined);
-
                             router.refresh();
+                            setUpdating(undefined);
                           },
                         },
                       );
@@ -191,19 +212,19 @@ export function ListCollectionsTable({ collections }: Props) {
                   <DropdownMenuItem
                     className="flex gap-2"
                     onClick={() => {
-                      setUpdating(collection.id);
+                      setUpdating(product.id);
 
                       archive.mutate(
                         {
-                          id: collection.id,
-                          user: String(user?.id),
+                          id: product.id,
                           store: String(organization?.id),
+                          user: String(user?.id),
                         },
                         {
-                          onSuccess: () => {
+                          onSuccess(data) {
                             toast({
-                              title: "Coleção arquivada.",
-                              description: `A coleção ${collection.name} foi arquivada.`,
+                              title: "Produto arquivado.",
+                              description: `O produto ${data?.name} foi arquivado`,
                               className: "shadow-none p-3",
                             });
 
@@ -224,7 +245,7 @@ export function ListCollectionsTable({ collections }: Props) {
                 <DropdownMenuItem
                   className="group flex gap-2 text-red-500"
                   onClick={() => {
-                    setUpdating(collection.id);
+                    setUpdating(product.id);
                     onOpen();
                   }}
                 >
@@ -240,23 +261,25 @@ export function ListCollectionsTable({ collections }: Props) {
   ];
 
   const table = useReactTable({
+    data: products,
     columns,
-    data: collections,
     getCoreRowModel: getCoreRowModel(),
   });
 
   return (
     <>
-      <Table className="mb-6">
+      <Table>
         <TableHeader>
           {table.getHeaderGroups().map((group) => (
             <TableRow key={group.id} className="border-0 hover:bg-transparent">
               {group.headers.map((header) => (
-                <TableHead key={header.id} className="uppercase">
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
+                <TableHead key={header.id} className="uppercase ">
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                 </TableHead>
               ))}
             </TableRow>
@@ -287,37 +310,42 @@ export function ListCollectionsTable({ collections }: Props) {
       <AlertDialog open={isOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir coleção</AlertDialogTitle>
+            <AlertDialogTitle>Excluir produto</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa coleção será excluida de forma permanente e não poderá ser
-              recuperada.
+              Este produto será excluido de forma permanente e não poderá ser
+              recuperado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={onClose}>
-              Não quero excluir
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={onClose}>Cancelar</AlertDialogCancel>
 
             <AlertDialogAction
               disabled={destroy.isLoading}
               onClick={() => {
                 destroy.mutate(
                   {
-                    id: String(updating),
+                    id: updating as string,
                     user: String(user?.id),
                     store: String(organization?.id),
                   },
                   {
                     onSuccess: () => {
                       toast({
-                        title: "Coleção excluida.",
-                        description: `A coleção foi excluida.`,
+                        title: "Produto excluido",
+                        description: `O produto foi excluido.`,
                         className: "shadow-none p-3",
                       });
 
                       router.refresh();
                       setUpdating(undefined);
                       onClose();
+                    },
+                    onError: () => {
+                      toast({
+                        title: "Ocorreu um problema",
+                        description: `O produto não pode ser excluido no momento.`,
+                        className: "shadow-none p-3",
+                      });
                     },
                   },
                 );
