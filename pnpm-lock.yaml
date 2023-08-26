@@ -56,6 +56,9 @@ dependencies:
   '@tiptap/starter-kit':
     specifier: ^2.1.6
     version: 2.1.6(@tiptap/pm@2.1.6)
+  '@total-typescript/ts-reset':
+    specifier: ^0.5.1
+    version: 0.5.1
   '@unkey/api':
     specifier: ^0.6.16
     version: 0.6.16
@@ -1535,6 +1538,10 @@ packages:
       '@tiptap/extension-text': 2.1.6(@tiptap/core@2.1.6)
     transitivePeerDependencies:
       - '@tiptap/pm'
+    dev: false
+
+  /@total-typescript/ts-reset@0.5.1:
+    resolution: {integrity: sha512-AqlrT8YA1o7Ff5wPfMOL0pvL+1X+sw60NN6CcOCqs658emD6RfiXhF7Gu9QcfKBH7ELY2nInLhKSCWVoNL70MQ==}
     dev: false
 
   /@types/body-parser@1.19.2:
