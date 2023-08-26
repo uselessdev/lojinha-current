@@ -10,8 +10,6 @@
 - **api:carts** carts creation and editing
 - **api:customer** customers, orders and addresses
 - **api:orders** add orders
-- **api:store** add endpoint for store settings
 
-- **webhooks** create account
-- **webhooks** create store
+- **api:store** add endpoint for store settings
 - **webhooks** create customer from store

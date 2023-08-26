@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.12.2",
     "@clerk/localizations": "^1.24.1",
     "@clerk/nextjs": "^4.23.2",
     "@fnando/cnpj": "^1.0.2",
@@ -42,6 +43,7 @@
     "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.45.4",
     "slugify": "^1.6.6",
+    "svix": "^1.8.1",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.6",
     "uploadthing": "^5.3.3",
