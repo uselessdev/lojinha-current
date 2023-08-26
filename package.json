@@ -27,6 +27,7 @@
     "@tiptap/extension-underline": "^2.1.6",
     "@tiptap/react": "^2.1.6",
     "@tiptap/starter-kit": "^2.1.6",
+    "@total-typescript/ts-reset": "^0.5.1",
     "@unkey/api": "^0.6.16",
     "@uploadthing/react": "^5.3.0",
     "@vercel/analytics": "^1.0.2",
