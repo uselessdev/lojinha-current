@@ -12,15 +12,7 @@ import { db } from "~/lib/database";
 import { ListCollectionsTable } from "./components/list-collections-table";
 
 export default async function CollectionsPage() {
-  const { orgId, user, organization } = auth();
-
-  console.log(
-    ">> starting fetch collections: store: ",
-    orgId,
-    `${organization?.name}`,
-    " user: ",
-    user?.id,
-  );
+  const { orgId } = auth();
 
   const collections = await db.collection.findMany({
     where: {
