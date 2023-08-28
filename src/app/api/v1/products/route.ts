@@ -22,6 +22,7 @@ export async function GET(request: Request) {
       },
     },
     include: {
+      images: true,
       collections: true,
       _count: true,
     },

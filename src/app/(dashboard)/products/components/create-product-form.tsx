@@ -60,10 +60,7 @@ export function CreateProductForm({ collections }: Props) {
     value: collection.id,
   }));
 
-  const { startUpload, isUploading } = useUploadThing("products", {
-    onUploadError: (error) => console.log(error),
-    onClientUploadComplete: console.log,
-  });
+  const { startUpload, isUploading } = useUploadThing("products");
 
   const { mutate, isLoading } = useAction(createProductAction);
 
