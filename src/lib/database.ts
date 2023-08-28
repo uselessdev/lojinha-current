@@ -8,8 +8,8 @@ const globalForPrisma = globalThis as unknown as {
 export const db =
   globalForPrisma.db ??
   new PrismaClient({
-    log: ["query", "error", "warn", "info"],
-    // env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    log:
+      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 
 if (env.NODE_ENV !== "production") globalForPrisma.db = db;
