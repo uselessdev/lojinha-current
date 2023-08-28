@@ -9,7 +9,15 @@ import { db } from "~/lib/database";
 import { EventsListTable } from "./components/events-list-table";
 
 export default async function EventsPage() {
-  const { orgId, userId } = auth();
+  const { orgId, userId, user, organization } = auth();
+
+  console.log(
+    ">> starting fetch events: store: ",
+    orgId,
+    `${organization?.name}`,
+    " user: ",
+    user?.id,
+  );
 
   const events = await db.event.findMany({
     where: {
