@@ -16,7 +16,7 @@ export default async function CollectionsPage() {
 
   const collections = await db.collection.findMany({
     where: {
-      store: orgId as string,
+      store: String(orgId),
     },
     include: {
       parents: true,
