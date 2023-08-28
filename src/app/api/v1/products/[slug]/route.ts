@@ -26,6 +26,7 @@ export async function GET(request: Request, { params }: Params) {
       },
     },
     include: {
+      images: true,
       _count: true,
     },
   });

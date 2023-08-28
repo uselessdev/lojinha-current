@@ -48,10 +48,7 @@ export function CreateCollectionForm({ collections }: Props) {
   });
 
   const [selectedFiles, setSelectedFiles] = useState<Array<File>>([]);
-  const { startUpload, isUploading } = useUploadThing("collections", {
-    onUploadError: (error) => console.log(error),
-    onClientUploadComplete: console.log,
-  });
+  const { startUpload, isUploading } = useUploadThing("collections");
 
   const options = collections.map((collection) => ({
     value: collection.id,
