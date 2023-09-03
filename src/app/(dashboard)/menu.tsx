@@ -6,6 +6,7 @@ import {
   SettingsIcon,
   ShoppingCartIcon,
   TagIcon,
+  WebhookIcon,
 } from "lucide-react";
 import { type ReactElement } from "react";
 
@@ -48,6 +49,11 @@ export const menu: Array<{
     url: `/events`,
     label: `Eventos`,
     icon: <NewspaperIcon className="text-current" />,
+  },
+  {
+    url: "/store-webhooks",
+    label: "Webhooks",
+    icon: <WebhookIcon className="text-current" />,
   },
   {
     url: `/settings`,

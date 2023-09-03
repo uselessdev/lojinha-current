@@ -4,6 +4,7 @@ import { type ActionReturnType } from "~/lib/use-action";
 import { collectionSchema, type CollectionSchema } from "../schema";
 import { type Collection } from "@prisma/client";
 import { db } from "~/lib/database";
+import { svix } from "~/lib/svix";
 
 export async function createCollectionAction(
   data: CollectionSchema,
@@ -35,7 +36,18 @@ export async function createCollectionAction(
       },
     });
 
+    const webhook = await db.storeSvix.findFirst({
+      where: {
+        store,
+      },
+    });
+
     if (collection) {
+      await svix.message.create(webhook?.sid as string, {
+        eventType: "collection.create",
+        payload: collection,
+      });
+
       await db.event.create({
         data: {
           user,

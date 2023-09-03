@@ -8,6 +8,7 @@ import type { WebhookRequiredHeaders } from "svix";
 import { headers } from "next/headers";
 import { env } from "~/env.mjs";
 import { db } from "~/lib/database";
+import { svix } from "~/lib/svix";
 
 async function handler(request: Request) {
   const payload = (await request.json()) as string;
@@ -70,6 +71,19 @@ async function createOrganizationEvent(store: OrganizationJSON) {
     name: store.name,
     created_by: store.created_by,
   };
+
+  // create application for store.
+  const app = await svix.application.create({
+    name: store.name,
+    uid: store.id,
+  });
+
+  await db.storeSvix.create({
+    data: {
+      sid: app.id,
+      store: store.id,
+    },
+  });
 
   await db.event.create({
     data: {

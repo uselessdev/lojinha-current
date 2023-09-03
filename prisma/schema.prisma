@@ -223,3 +223,11 @@ model Image {
 
   @@map("images")
 }
+
+model StoreSvix {
+  id    String @id @default(uuid())
+  store String
+  sid   String
+
+  @@map("store_svix_panel")
+}
