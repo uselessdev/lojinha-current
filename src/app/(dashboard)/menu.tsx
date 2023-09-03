@@ -4,6 +4,7 @@ import {
   LayersIcon,
   NewspaperIcon,
   SettingsIcon,
+  ShoppingCartIcon,
   TagIcon,
 } from "lucide-react";
 import { type ReactElement } from "react";
@@ -28,11 +29,11 @@ export const menu: Array<{
     label: "Produtos",
     icon: <TagIcon className="text-current" />,
   },
-  // {
-  //   url: `/carts`,
-  //   label: "Carrinhos",
-  //   icon: <ShoppingCartIcon className="text-current" />,
-  // },
+  {
+    url: `/carts`,
+    label: "Carrinhos",
+    icon: <ShoppingCartIcon className="text-current" />,
+  },
   // {
   //   url: `/orders`,
   //   label: "Pedidos",
