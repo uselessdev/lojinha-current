@@ -14,12 +14,12 @@ export async function GET(request: Request) {
       status: {
         notIn: ["DISABLED", "DRAFT", "VALIDATION"],
       },
-      collections: {
-        some: {
-          deletedAt: null,
-          slug: collection ?? undefined,
-        },
-      },
+      // collections: {
+      //   some: {
+      //     deletedAt: null,
+      //     slug: collection ?? undefined,
+      //   },
+      // },
     },
     include: {
       images: true,

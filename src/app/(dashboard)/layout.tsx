@@ -38,7 +38,7 @@ export default function DashboardLayout({
 
       {store.organization ? (
         <div className="grid min-h-screen w-full grid-cols-[300px_1fr]">
-          <aside className="grid grid-rows-[80px_1fr]">
+          <aside className="sticky top-0 grid grid-rows-[80px_1fr]">
             <header className="flex h-20 flex-col justify-center px-6">
               <h1 className="text-xs font-semibold text-gray-700">
                 <Link href="/">
