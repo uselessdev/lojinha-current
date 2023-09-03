@@ -10,14 +10,21 @@ export function ReadableEvent(props: {
   action: EventActions;
   createdAt: Date;
 }) {
-  const { membershipList, isLoaded } = useOrganization({ membershipList: {} });
+  const { membershipList, isLoaded, organization } = useOrganization({
+    membershipList: {},
+  });
   const user = membershipList?.find(
     ({ publicUserData }) => publicUserData.userId === props.user,
   );
 
   return (
-    <p>
-      {user && isLoaded ? user?.publicUserData.firstName : `🤖 ${props.user}`}{" "}
+    <p className="text-zinc-700">
+      <strong className="font-medium">
+        {user && isLoaded
+          ? user?.publicUserData.firstName
+          : `🤖 ${organization?.name}`}
+        {": "}
+      </strong>
       {getAction(props.action)}{" "}
       {intlFormatDistance(props.createdAt, new Date(), { locale: "pt-BR" })}
     </p>
