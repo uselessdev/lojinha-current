@@ -26,7 +26,12 @@ export async function GET(
     include: {
       products: {
         select: {
-          product: true,
+          product: {
+            include: {
+              collections: true,
+              images: true,
+            },
+          },
           quantity: true,
         },
       },
