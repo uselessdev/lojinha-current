@@ -19,11 +19,6 @@ export async function GET(request: Request, { params }: Params) {
       status: {
         notIn: ["DISABLED", "DRAFT", "VALIDATION"],
       },
-      collections: {
-        some: {
-          deletedAt: null,
-        },
-      },
     },
     include: {
       images: true,
