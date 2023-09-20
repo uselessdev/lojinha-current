@@ -1,4 +1,5 @@
 import {
+  BoxIcon,
   HomeIcon,
   KeyRoundIcon,
   LayersIcon,
@@ -6,6 +7,7 @@ import {
   SettingsIcon,
   ShoppingCartIcon,
   TagIcon,
+  Users2Icon,
   WebhookIcon,
 } from "lucide-react";
 import { type ReactElement } from "react";
@@ -35,11 +37,16 @@ export const menu: Array<{
     label: "Carrinhos",
     icon: <ShoppingCartIcon className="text-current" />,
   },
-  // {
-  //   url: `/orders`,
-  //   label: "Pedidos",
-  //   icon: <BoxIcon className="text-current" />,
-  // },
+  {
+    url: `/orders`,
+    label: "Pedidos",
+    icon: <BoxIcon className="text-current" />,
+  },
+  {
+    url: `/customers`,
+    label: "Clientes",
+    icon: <Users2Icon className="text-current" />,
+  },
   {
     url: `/keys`,
     label: `Chaves de API`,

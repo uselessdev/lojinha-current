@@ -2,13 +2,8 @@
 
 ## TODO
 
-- **platform:carts** Add carts
-- **platform:orders** Add orders
-- **platform:customers** Add customers with address
-- **platform:emails** send email after create, update or cancel order (resend).
-
-- **api:customer** customers, orders and addresses
-- **api:orders** add orders
+- **platform:emails** send email when create order.
+- **platform:emails** send email when update order (cancel, shipping, refund, refunded).
 
 - **api:store** add endpoint for store settings
 - **webhooks** create customer from store, create order, update order payment status
