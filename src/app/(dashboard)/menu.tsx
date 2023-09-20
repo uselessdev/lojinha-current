@@ -1,4 +1,5 @@
 import {
+  BoxIcon,
   HomeIcon,
   KeyRoundIcon,
   LayersIcon,
@@ -36,11 +37,11 @@ export const menu: Array<{
     label: "Carrinhos",
     icon: <ShoppingCartIcon className="text-current" />,
   },
-  // {
-  //   url: `/orders`,
-  //   label: "Pedidos",
-  //   icon: <BoxIcon className="text-current" />,
-  // },
+  {
+    url: `/orders`,
+    label: "Pedidos",
+    icon: <BoxIcon className="text-current" />,
+  },
   {
     url: `/customers`,
     label: "Clientes",
