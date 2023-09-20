@@ -7,8 +7,16 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { BoxIcon, HomeIcon, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -17,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { formatter } from "~/lib/utils";
 
 type CustomerWithAddressAndOrder = Customer & {
   addresses: Address[];
@@ -37,42 +46,58 @@ export function ListCustomers({ customers }: Props) {
     column.accessor("externalId", {
       header: "ID Externo",
     }),
-    column.accessor("orders", {
-      header: "Pedidos",
+    column.accessor("createdAt", {
+      header: "Cadastro em",
       cell(props) {
-        const orders = props.getValue();
-
-        return (
-          <div className="flex flex-wrap gap-2">
-            {orders.map((order) => (
-              <Badge key={order.id} variant="secondary">
-                <Link href={`/orders/${order.id}`}>
-                  #{order.id.slice(0, 8)}
-                </Link>
-              </Badge>
-            ))}
-          </div>
-        );
+        const data = props.getValue();
+        return formatter.date(data);
       },
     }),
-    column.accessor("addresses", {
-      header: "Endereços",
-      cell(props) {
-        const addresses = props.getValue();
+    column.accessor(
+      ({ id, addresses, orders }) => ({ id, addresses, orders }),
+      {
+        header: "",
+        id: "actions",
+        cell(props) {
+          const { id, addresses, orders } = props.getValue();
 
-        return (
-          <div className="flex flex-wrap gap-2">
-            {addresses.map((address) => (
-              <Badge key={address.id} variant="secondary">
-                <Link href={`/addresses/${address.id}`}>
-                  {address.alias ?? address.street}
-                </Link>
-              </Badge>
-            ))}
-          </div>
-        );
+          return (
+            <div className="flex justify-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <span className="sr-only">abrir menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    asChild
+                    className="flex gap-2"
+                    disabled={addresses.length <= 0}
+                  >
+                    <Link href={`/customers/${id}/addresses`}>
+                      <HomeIcon className="h-3 w-3" /> Endereços
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    asChild
+                    className="flex gap-2"
+                    disabled={orders.length <= 0}
+                  >
+                    <Link href={`/customers/${id}/orders`}>
+                      <BoxIcon className="h-3 w-3" /> Pedidos
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
       },
-    }),
+    ),
   ];
 
   const table = useReactTable({
