@@ -84,7 +84,9 @@ export default function DashboardLayout({
               />
               <UserButton />
             </PageHeader>
-            <main className="pb-6 pr-6">{children}</main>
+            <main className="h-[calc(100dvh-80px)] overflow-y-scroll pb-6 pr-6">
+              {children}
+            </main>
           </section>
         </div>
       ) : null}
