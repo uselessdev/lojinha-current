@@ -37,8 +37,17 @@ async function handler(request: Request) {
     case "user.created":
       await createAccountEvent(data.data);
       break;
+    case "user.deleted":
+      /** @todo sync for user deleted */
+      break;
     case "organization.created":
       await createOrganizationEvent(data.data);
+      break;
+    case "organization.deleted":
+      /** @todo sync for organization delete */
+      break;
+    case "organizationInvitation.accepted":
+      /** @todo handle for invitation acceped */
       break;
     default:
       break;
@@ -52,7 +61,7 @@ export const POST = handler;
 async function createAccountEvent(user: UserJSON) {
   const payload = {
     id: user.id,
-    email: user.email_addresses.map(({ email_address }) => email_address).at(0),
+    email: user.email_addresses.map(({ email_address }) => email_address),
     name: `${user.first_name} ${user.last_name}`,
   };
 
@@ -72,13 +81,12 @@ async function createOrganizationEvent(store: OrganizationJSON) {
     created_by: store.created_by,
   };
 
-  // create application for store.
   const app = await svix.application.create({
     name: store.name,
     uid: store.id,
   });
 
-  await db.storeSvix.create({
+  await db.webhook.create({
     data: {
       sid: app.id,
       store: store.id,

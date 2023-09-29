@@ -36,7 +36,7 @@ export async function createCollectionAction(
       },
     });
 
-    const webhook = await db.storeSvix.findFirst({
+    const webhook = await db.webhook.findFirst({
       where: {
         store,
       },

@@ -12,7 +12,9 @@ datasource db {
 
 enum EventActions {
   CREATE_ACCOUNT
+
   CREATE_STORE
+  UPDATE_STORE
 
   CREATE_COLLECTION
   UPDATE_COLLECTION
@@ -224,10 +226,10 @@ model Image {
   @@map("images")
 }
 
-model StoreSvix {
+model Webhook {
   id    String @id @default(uuid())
   store String
   sid   String
 
-  @@map("store_svix_panel")
+  @@map("webhooks")
 }
