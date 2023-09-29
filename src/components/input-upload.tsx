@@ -50,7 +50,7 @@ export function InputUpload({
 
   return (
     <section
-      className={clsx("w-full rounded-md bg-gray-50 p-2", {
+      className={clsx("w-full rounded-md bg-background p-2", {
         "ring-2 ring-gray-700 ring-offset-2": isDragActive,
       })}
     >
@@ -59,7 +59,7 @@ export function InputUpload({
 
         {files.length <= 0 ? (
           <div className="grid min-h-[160px] place-content-center">
-            <p className="h-full w-full text-center text-sm text-gray-400">
+            <p className="h-full w-full text-center text-sm">
               Selecione ou arraste seus arquivos aqui.
             </p>
           </div>

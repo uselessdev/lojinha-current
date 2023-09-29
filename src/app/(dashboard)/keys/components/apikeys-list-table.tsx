@@ -222,7 +222,7 @@ export function ApiKeysList(props: Props) {
                   ela em um lugar seguro.
                 </strong>
               </p>
-              <div className="flex items-center justify-between rounded-md bg-gray-50 p-2">
+              <div className="flex items-center justify-between rounded-md bg-foreground/5 p-2">
                 <pre>
                   {visible
                     ? preview
