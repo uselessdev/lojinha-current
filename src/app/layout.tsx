@@ -1,8 +1,9 @@
-import '~/app/globals.css'
-import { ptBR } from '@clerk/localizations'
-import { ClerkProvider } from '@clerk/nextjs'
-import type { Metadata } from 'next'
+import "~/app/globals.css";
+import { ptBR } from "@clerk/localizations";
+import { ClerkProvider } from "@clerk/nextjs";
+import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "~/components/theme-provider";
 
 export const metadata: Metadata = {
   title: {
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <ClerkProvider
@@ -47,10 +48,19 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="pt-BR">
-        <body>{children}</body>
+      <html lang="pt-BR" className="light" style={{ colorScheme: "light" }}>
+        <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </body>
         <Analytics />
       </html>
     </ClerkProvider>
-  )
+  );
 }
