@@ -23,6 +23,7 @@ export async function updateStoreAction(
   try {
     const emails = await db.email.findMany({
       where: {
+        store: payload.data.id,
         address: {
           notIn: payload.data.emails,
         },

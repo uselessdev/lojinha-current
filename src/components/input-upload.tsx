@@ -43,6 +43,7 @@ export function InputUpload({
     accept: {
       "image/jpg": [".jpeg", ".jpg"],
       "image/png": [".png"],
+      "image/avif": [".avif"],
     },
     maxSize: 2 / 1e-6, // <- maxSize to 2mb,
     onDrop,

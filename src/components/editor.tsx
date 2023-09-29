@@ -150,7 +150,7 @@ function EditorMenu({ editor }: { editor: TEditor | null }) {
       {menu(editor).map(({ id, items }) => (
         <div
           key={id}
-          className="flex gap-1 border-r border-slate-100 pr-3 last:border-r-0"
+          className="flex gap-1 border-r border-input pr-3 last:border-r-0"
         >
           {items.map((item) => {
             const active =
@@ -167,8 +167,8 @@ function EditorMenu({ editor }: { editor: TEditor | null }) {
                 key={item.name}
                 type="button"
                 onClick={item.command}
-                className={`flex h-8 w-8 items-center justify-center rounded-md outline-none hover:bg-gray-100 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
-                  active ? "bg-gray-50" : ""
+                className={`flex h-8 w-8 items-center justify-center rounded-md outline-none hover:bg-foreground/5 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
+                  active ? "bg-gray-100/10" : ""
                 }`}
               >
                 {item.icon}
