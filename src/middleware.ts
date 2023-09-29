@@ -33,6 +33,7 @@ export default authMiddleware({
       return NextResponse.next();
     }
   },
+  // @ts-expect-error regex failed
   publicRoutes: ["/", "/api/(.*)", "/webhooks/(.*)"],
 });
 

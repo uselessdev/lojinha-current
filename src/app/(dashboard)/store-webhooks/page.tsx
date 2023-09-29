@@ -20,7 +20,7 @@ async function getSvixPortal(id: string) {
 export default async function SettingsPage() {
   const { orgId } = auth();
 
-  const portal = await db.storeSvix.findFirst({
+  const portal = await db.webhook.findFirst({
     where: {
       store: String(orgId),
     },

@@ -4,6 +4,12 @@ import { ApiCors } from "~/lib/api/cors";
 import { ApiError, ApiErrorFromSchema, RaiseApiError } from "~/lib/api/errors";
 import { transformOrderResponse } from "~/lib/api/transforms";
 import { db } from "~/lib/database";
+import EmailOrderCustomer from "~/components/emails/order-customer";
+import { formatter } from "~/lib/utils";
+import { intlFormat } from "date-fns";
+import { type OrderStatus } from "@prisma/client";
+import EmailOrderStore from "~/components/emails/order-store";
+import { resend } from "~/lib/resend";
 
 export function OPTIONS() {
   return ApiCors();
@@ -80,6 +86,15 @@ const createOrderSchema = z.object({
 });
 
 const orderSchema = z.union([updateOrderSchema, createOrderSchema]);
+
+function getOrderStatus(status: OrderStatus) {
+  switch (status) {
+    case "CREATED":
+      return `Aguardando Pagamento.`;
+    default:
+      break;
+  }
+}
 
 export async function POST(request: Request, { params }: Params) {
   const store = String(request.headers.get("X-Store-ID"));
@@ -198,6 +213,7 @@ export async function POST(request: Request, { params }: Params) {
           },
         },
         address: true,
+        customer: true,
       },
     });
 
@@ -221,6 +237,7 @@ export async function POST(request: Request, { params }: Params) {
             },
           },
           address: true,
+          customer: true,
         },
       });
     }
@@ -234,6 +251,69 @@ export async function POST(request: Request, { params }: Params) {
           store,
         },
       });
+
+      const company = await db.store.findFirst({
+        where: {
+          store,
+        },
+        include: {
+          emails: true,
+        },
+      });
+
+      if (company) {
+        await resend.emails.send({
+          from: `${company.name} <pedidos@lojinha.dev>`,
+          to: [order.customer?.email ?? ""],
+          subject: "Pedido Confirmado!",
+          react: EmailOrderCustomer({
+            store: company?.name ?? "",
+            order: {
+              id: order.id,
+              price: formatter.currency(order.price ?? 0),
+              status: getOrderStatus(order.status) ?? "",
+              address: `${order.address?.street}, ${order.address?.number}, ${order.address?.neightborhood} - ${order.address?.city}, ${order.address?.state} - CEP: ${order.address?.zipcode} (${order.address?.complement})`,
+              date: intlFormat(
+                order.createdAt,
+                {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                },
+                { locale: "pt-BR" },
+              ),
+            },
+          }),
+        });
+
+        await resend.emails.send({
+          from: `lojinha.dev <pedidos@lojinha.dev>`,
+          to: company.emails.map(({ address }) => address),
+          subject: "Novo pedido na sua loja!",
+          react: EmailOrderStore({
+            store: company?.name ?? "",
+            order: {
+              id: order.id,
+              price: formatter.currency(order.price ?? 0),
+              status: getOrderStatus(order.status) ?? "",
+              customer: {
+                email: order.customer?.email ?? "",
+                id: order.customer?.id ?? "",
+              },
+              address: `${order.address?.street}, ${order.address?.number}, ${order.address?.neightborhood} - ${order.address?.city}, ${order.address?.state} - CEP: ${order.address?.zipcode} (${order.address?.complement})`,
+              date: intlFormat(
+                order.createdAt,
+                {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                },
+                { locale: "pt-BR" },
+              ),
+            },
+          }),
+        });
+      }
     }
 
     return NextResponse.json(

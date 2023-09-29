@@ -4,6 +4,7 @@ export function getAction(event: EventActions) {
   return {
     CREATE_ACCOUNT: `criou a conta 🎉`,
     CREATE_STORE: `criou a loja 🏗`,
+    UPDATE_STORE: `atualizou as informações da loja 🔧`,
     CREATE_COLLECTION: `criou uma coleção 🗂`,
     CREATE_PRODUCT: `criou um produto 🏷`,
     UPDATE_COLLECTION: `atualizou uma coleção 🔧`,
