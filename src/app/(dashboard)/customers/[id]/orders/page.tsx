@@ -51,7 +51,7 @@ export default async function OrdersPage({ params }: Props) {
 
       {orders.length <= 0 ? (
         <CardContent>
-          <p className="text-sm text-zinc-400">
+          <p className="text-xs text-zinc-500">
             Este cliente ainda não tem nenhum pedido realizado.
           </p>
         </CardContent>
