@@ -50,9 +50,12 @@ export function InputUpload({
 
   return (
     <section
-      className={clsx("w-full rounded-md bg-background p-2", {
-        "ring-2 ring-gray-700 ring-offset-2": isDragActive,
-      })}
+      className={clsx(
+        "w-full rounded-md border border-input bg-background p-2",
+        {
+          "ring-2 ring-gray-700 ring-offset-2": isDragActive,
+        },
+      )}
     >
       <div {...getRootProps({ className: "dropzone min-h-[160px]" })}>
         <input {...getInputProps()} />
