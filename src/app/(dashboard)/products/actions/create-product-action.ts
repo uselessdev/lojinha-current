@@ -1,62 +1,53 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { formatter } from "~/lib/utils";
-import { type ProductSchema, productSchema } from "../schema";
-import { type ActionReturnType } from "~/lib/use-action";
-import { type Product } from "@prisma/client";
+import { createServerAction } from "~/lib/actions/create-action";
+import { productSchema } from "../schema";
 import { db } from "~/lib/database";
+import { formatter } from "~/lib/utils";
+import { svix } from "~/lib/svix";
+import { revalidatePath } from "next/cache";
 
-export async function createProductAction(
-  data: ProductSchema,
-): ActionReturnType<Product> {
-  const input = productSchema.safeParse(data);
+export const createProductAction = createServerAction({
+  schema: productSchema,
+  handler: async ({ collections, price, originalPrice, ...payload }, ctx) => {
+    try {
+      const product = await db.$transaction(async (tx) => {
+        const product = await tx.product.create({
+          data: {
+            ...payload,
+            price: formatter.number(price ?? ""),
+            originalPrice: formatter.number(originalPrice ?? ""),
+            store: ctx.store,
+            collections: {
+              connect: collections?.map((id) => ({ id })),
+            },
+          },
+        });
 
-  if (!input.success) {
-    return {
-      status: "error",
-      error:
-        `${input.error.issues.at(0)?.path.join(".")}: "${input.error.issues.at(
-          0,
-        )?.message}"` ?? "",
-    };
-  }
+        await tx.event.create({
+          data: {
+            action: "CREATE_PRODUCT",
+            payload: { ...payload, price, originalPrice, collections },
+            user: ctx.user,
+            store: ctx.store,
+          },
+        });
 
-  try {
-    const { user, ...data } = input.data;
-
-    const product = await db.product.create({
-      data: {
-        name: data.name,
-        slug: data.slug,
-        store: data.store,
-        description: data.description,
-        originalPrice: formatter.number(data.originalPrice ?? ""),
-        price: formatter.number(data.price ?? ""),
-        quantity: data.quantity,
-        sku: data.sku,
-        status: data.status,
-        collections: {
-          connect: data.collections?.map((id) => ({ id })),
-        },
-      },
-    });
-
-    if (product) {
-      await db.event.create({
-        data: {
-          action: "CREATE_PRODUCT",
-          payload: data,
-          store: data.store,
-          user,
-        },
+        return product;
       });
+
+      if (product) {
+        await svix.message.create(String(ctx.wh), {
+          eventType: "products.create",
+          payload: { product },
+        });
+      }
+
+      revalidatePath("/products", "page");
+
+      return { success: true, data: product };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
     }
-
-    revalidatePath("/products");
-
-    return { status: "success", data: product };
-  } catch (error) {
-    return { status: "error", error: (error as Error).message };
-  }
-}
+  },
+});

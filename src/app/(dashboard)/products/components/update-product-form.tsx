@@ -1,10 +1,10 @@
 "use client";
 
-import { useOrganization, useUser } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { type ProductSchema, productSchema } from "../schema";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Product, type Collection, type Image } from "@prisma/client";
 import { useUploadThing } from "~/lib/uploadthing";
@@ -35,6 +35,7 @@ import { Editor } from "~/components/editor";
 import { formatter } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { deleteImagesAction } from "../../collections/actions/delete-images-action";
+import { useServerAction } from "~/lib/actions/use-action";
 
 type Props = {
   collections: Collection[];
@@ -43,7 +44,6 @@ type Props = {
 
 export function UpdateProductForm({ collections, product }: Props) {
   const { organization } = useOrganization();
-  const { user } = useUser();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const images = useAction(deleteImagesAction);
   const router = useRouter();
@@ -62,8 +62,6 @@ export function UpdateProductForm({ collections, product }: Props) {
         : "",
       sku: product.sku ?? "",
       quantity: product.quantity ?? 1,
-      store: String(organization?.id),
-      user: String(user?.id),
     },
   });
 
@@ -79,12 +77,14 @@ export function UpdateProductForm({ collections, product }: Props) {
 
   const { startUpload, isUploading } = useUploadThing("products");
 
-  const { mutate, isLoading } = useAction(updateProductAction);
+  const { mutate, isLoading } = useServerAction(updateProductAction);
 
-  const onSubmit: SubmitHandler<ProductSchema> = (data) => {
-    mutate(data, {
-      onSuccess: async (data) => {
-        await startUpload(selectedFiles, { product: String(data?.id) });
+  const onSubmit = () => {
+    mutate(form.getValues(), {
+      async onSuccess(data) {
+        if (selectedFiles.length > 0) {
+          await startUpload(selectedFiles, { product: String(data?.id) });
+        }
 
         toast({
           title: "Produto alterado",
@@ -92,7 +92,6 @@ export function UpdateProductForm({ collections, product }: Props) {
           className: "shadow-none p-3",
         });
 
-        router.refresh();
         router.push(`/products`);
       },
       onError: () => {
@@ -107,8 +106,7 @@ export function UpdateProductForm({ collections, product }: Props) {
 
   return (
     <Form {...form}>
-      {/* eslint-disable-next-line */}
-      <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+      <form className="space-y-4" action={onSubmit}>
         <FormField
           control={form.control}
           name="name"

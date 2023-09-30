@@ -44,7 +44,7 @@ export default async function CollectionsPage() {
 
       {collections.length <= 0 ? (
         <CardContent>
-          <p className="text-xs text-gray-500">Nenhuma coleção encontrada.</p>
+          <p className="text-xs text-zinc-500">Nenhuma coleção encontrada.</p>
         </CardContent>
       ) : null}
 

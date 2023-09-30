@@ -1,48 +1,46 @@
 "use server";
 
-import { type Product } from "@prisma/client";
-import { type Schema, schema } from "../schema";
-import { type ActionReturnType } from "~/lib/use-action";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { createServerAction } from "~/lib/actions/create-action";
 import { db } from "~/lib/database";
+import { svix } from "~/lib/svix";
 
-export async function archiveProductAction(
-  data: Schema,
-): ActionReturnType<Product> {
-  const payload = schema.safeParse(data);
-
-  if (!payload.success) {
-    return {
-      status: "error",
-      error:
-        `${payload.error.issues
-          .at(0)
-          ?.path.join(".")}: "${payload.error.issues.at(0)?.message}"` ?? "",
-    };
-  }
-
-  try {
-    const product = await db.product.update({
-      where: {
-        id: payload.data.id,
-      },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
-
-    if (product) {
-      await db.event.create({
+export const archiveProductAction = createServerAction({
+  schema: z.object({ id: z.string().uuid("Product id is required") }),
+  handler: async (payload, ctx) => {
+    try {
+      const product = await db.product.update({
+        where: {
+          id: payload.id,
+          store: ctx.store,
+        },
         data: {
-          payload: { id: payload.data.id },
-          user: payload.data.user,
-          store: product.store,
-          action: "ARCHIVE_PRODUCT",
+          deletedAt: new Date(),
         },
       });
-    }
 
-    return { status: "success", data: product };
-  } catch (err) {
-    return { status: "error", error: (err as Error).message };
-  }
-}
+      if (product) {
+        await db.event.create({
+          data: {
+            action: "ARCHIVE_PRODUCT",
+            user: ctx.user,
+            store: ctx.store,
+            payload,
+          },
+        });
+
+        await svix.message.create(String(ctx.wh), {
+          eventType: "products.archive",
+          payload: { product: product.id },
+        });
+      }
+
+      revalidatePath("/products", "page");
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  },
+});
