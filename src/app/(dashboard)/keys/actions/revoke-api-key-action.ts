@@ -1,9 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { env } from "~/env.mjs";
+import { createServerAction } from "~/lib/actions/create-action";
 import { db } from "~/lib/database";
-import { type ActionReturnType } from "~/lib/use-action";
 
 async function revokeKey(key: string) {
   try {
@@ -19,36 +20,26 @@ async function revokeKey(key: string) {
   }
 }
 
-const revokeSchema = z.object({
-  store: z.string().min(1, "ID da loja é inválido"),
-  user: z.string().min(1, "ID do usuário é inválido"),
-  key: z.string().min(1, "ID da chave é inválida"),
+export const revokeApiKeyAction = createServerAction({
+  schema: z.object({ key: z.string().min(1, "Invalid API key id") }),
+  handler: async (payload, ctx) => {
+    try {
+      await revokeKey(payload.key);
+
+      await db.event.create({
+        data: {
+          action: "REVOKE_KEY",
+          user: ctx.user,
+          store: ctx.store,
+          payload,
+        },
+      });
+
+      revalidatePath("/keys", "page");
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  },
 });
-
-export async function revokeApiKeyAction(
-  data: z.infer<typeof revokeSchema>,
-): ActionReturnType<string> {
-  const input = revokeSchema.safeParse(data);
-
-  if (!input.success) {
-    const errors = input.error.issues.map(({ message }) => message);
-    return { status: "error", error: errors[0] };
-  }
-
-  try {
-    await revokeKey(input.data.key);
-
-    await db.event.create({
-      data: {
-        action: "REVOKE_KEY",
-        payload: input.data,
-        user: input.data.user,
-        store: input.data.store,
-      },
-    });
-
-    return { status: "success" };
-  } catch (err) {
-    return { status: "error", error: (err as Error).message };
-  }
-}

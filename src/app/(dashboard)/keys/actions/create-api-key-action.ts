@@ -1,9 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { env } from "process";
 import { z } from "zod";
+import { createServerAction } from "~/lib/actions/create-action";
 import { db } from "~/lib/database";
-import { type ActionReturnType } from "~/lib/use-action";
 
 async function createApiKey(store: string) {
   const unkey = await fetch(`${env.UNKEY_APP_URL}/keys`, {
@@ -31,37 +32,30 @@ async function createApiKey(store: string) {
   return result as { key: string };
 }
 
-const schema = z.object({
-  store: z.string().min(1, "ID da loja é inválido"),
-  user: z.string().min(1, "ID do usuário é inválido"),
-});
+const schema = z.undefined();
 
-export async function createApiKeyAction(
-  data: z.infer<typeof schema>,
-): ActionReturnType<string> {
-  const input = schema.safeParse(data);
+export const createApiKeyAction = createServerAction({
+  schema,
+  handler: async (payload, ctx) => {
+    try {
+      const key = await createApiKey(ctx.store);
 
-  if (!input.success) {
-    const errors = input.error.issues.map(({ message }) => message);
-    return { status: "error", error: errors[0] };
-  }
+      if (key) {
+        await db.event.create({
+          data: {
+            action: "CREATE_KEY",
+            payload: { store: ctx.store },
+            user: ctx.user,
+            store: ctx.store,
+          },
+        });
+      }
 
-  try {
-    const key = await createApiKey(input.data.store);
+      revalidatePath("/keys", "page");
 
-    if (key) {
-      await db.event.create({
-        data: {
-          action: "CREATE_KEY",
-          payload: input.data,
-          user: input.data.user,
-          store: input.data.store,
-        },
-      });
+      return { success: true, data: key.key };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
     }
-
-    return { status: "success", data: key.key };
-  } catch (err) {
-    return { status: "error", error: (err as Error).message };
-  }
-}
+  },
+});

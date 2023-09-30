@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -20,7 +19,6 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { CopyIcon, EyeIcon, EyeOffIcon, Trash2Icon } from "lucide-react";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import {
   createColumnHelper,
   flexRender,
@@ -40,9 +38,9 @@ import { formatter } from "~/lib/utils";
 import { toast } from "~/components/ui/use-toast";
 import { type Key, type UnkeyResponse } from "../utils/fetch-api-keys";
 import { useClipboard } from "~/lib/use-clipboard";
-import { useAction } from "~/lib/use-action";
 import { createApiKeyAction } from "../actions/create-api-key-action";
 import { revokeApiKeyAction } from "../actions/revoke-api-key-action";
+import { useServerAction } from "~/lib/actions/use-action";
 
 type Props = {
   keys: UnkeyResponse;
@@ -51,8 +49,6 @@ type Props = {
 const column = createColumnHelper<Key>();
 
 export function ApiKeysList(props: Props) {
-  const { user } = useUser();
-  const { organization } = useOrganization();
   const [copied, copy] = useClipboard();
   const [isOpen, setIsOpen] = React.useState(false);
   const [preview, setPreview] = React.useState<string>("");
@@ -60,10 +56,8 @@ export function ApiKeysList(props: Props) {
   const [keyToRevoke, setKeyToRevoke] = React.useState<string>();
   const [revokeModal, setRevokeModal] = React.useState(false);
 
-  const create = useAction(createApiKeyAction);
-  const revoke = useAction(revokeApiKeyAction);
-
-  const router = useRouter();
+  const create = useServerAction(createApiKeyAction);
+  const revoke = useServerAction(revokeApiKeyAction);
 
   const handleCopyKeyAndCloseModal = async () => {
     await copy(preview ?? "");
@@ -71,7 +65,6 @@ export function ApiKeysList(props: Props) {
     setTimeout(() => {
       setPreview("");
       setIsOpen(false);
-      router.refresh();
     }, 600);
   };
 
@@ -149,19 +142,13 @@ export function ApiKeysList(props: Props) {
             size="sm"
             disabled={create.isLoading}
             onClick={() => {
-              create.mutate(
-                {
-                  store: String(organization?.id),
-                  user: String(user?.id),
+              create.mutate(undefined, {
+                onSuccess(data) {
+                  setPreview(data as string);
+                  setIsOpen(true);
                 },
-                {
-                  onSuccess(data) {
-                    setPreview(data as string);
-                    setIsOpen(true);
-                  },
-                  onError: (error) => console.log(error),
-                },
-              );
+                onError: (error) => console.log(error),
+              });
             }}
           >
             {create.isLoading ? "Criando..." : "Criar Chave"}
@@ -283,11 +270,7 @@ export function ApiKeysList(props: Props) {
               disabled={revoke.isLoading}
               onClick={() => {
                 revoke.mutate(
-                  {
-                    key: String(keyToRevoke),
-                    user: String(user?.id),
-                    store: String(organization?.id),
-                  },
+                  { key: String(keyToRevoke) },
                   {
                     onSuccess: () => {
                       toast({
@@ -297,7 +280,6 @@ export function ApiKeysList(props: Props) {
                         className: "shadow-none p-3",
                       });
 
-                      router.refresh();
                       setKeyToRevoke(undefined);
                       setRevokeModal(false);
                     },
