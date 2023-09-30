@@ -33,7 +33,7 @@ export default async function CartsPage() {
 
       {carts.length <= 0 ? (
         <CardContent>
-          <p className="text-sm text-zinc-600">Nenhum carrinho criado ainda.</p>
+          <p className="text-xs text-zinc-500">Nenhum carrinho criado ainda.</p>
         </CardContent>
       ) : null}
 

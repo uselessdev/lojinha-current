@@ -118,11 +118,11 @@ export function Autocomplete({
 
   return (
     <div className="relative w-full">
-      <div className="flex w-full flex-wrap gap-2 border-b bg-white py-1">
+      <div className="flex w-full flex-wrap gap-2 rounded-md border bg-background p-1 focus-within:ring-2 focus-within:ring-zinc-700 focus-within:ring-offset-2">
         {selected.map(function (selectedItemRender, index) {
           return (
             <span
-              className="flex max-w-fit items-center rounded-md bg-gray-50 text-xs font-semibold text-gray-500"
+              className="flex max-w-fit items-center rounded-[3px] bg-zinc-400/10 text-xs font-semibold"
               key={`selected-item-${index}`}
               {...getSelectedItemProps({
                 selectedItem: selectedItemRender,
@@ -131,7 +131,7 @@ export function Autocomplete({
             >
               <span className="pl-2 pr-1">{selectedItemRender.label}</span>
               <button
-                className="cursor-pointer rounded-e-md p-2 hover:bg-gray-100"
+                className="cursor-pointer rounded-e-md p-2 outline-none hover:bg-zinc-400/5 focus:bg-zinc-400/5"
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -144,19 +144,19 @@ export function Autocomplete({
           );
         })}
 
-        <div className="flex w-full flex-1 justify-between">
+        <div className="flex w-full flex-1 justify-between first:pl-2">
           <input
-            className="h-8 w-full outline-none"
+            className="h-8 w-full bg-transparent outline-none"
             {...getInputProps(getDropdownProps({ preventKeyAction: isOpen }))}
           />
-          <button type="button" {...getToggleButtonProps()}>
+          <button type="button" className="px-2" {...getToggleButtonProps()}>
             &#8595;
           </button>
         </div>
       </div>
 
       <ul
-        className={`absolute z-10 w-full min-w-[200px] max-w-max translate-y-4 rounded-md border bg-white p-1 opacity-0 transition-all ${
+        className={`absolute z-10 w-full min-w-[200px] max-w-max translate-y-4 rounded-md border bg-background p-1 opacity-0 transition-all ${
           isOpen ? "translate-y-2 opacity-100" : ""
         }`}
         {...getMenuProps({
@@ -171,8 +171,8 @@ export function Autocomplete({
         {items.length <= 0 && value.length > 0 ? (
           <li
             {...getItemProps({ item: { label: value, value }, index: 0 })}
-            className={`cursor-pointer rounded-md px-2 py-1 text-sm font-semibold text-gray-500 hover:bg-gray-50 ${
-              highlightedIndex === 0 ? `bg-gray-50` : ""
+            className={`cursor-pointer rounded-[3px] px-2 py-1 text-sm font-semibold ${
+              highlightedIndex === 0 ? `bg-zinc-400/10` : ""
             }`}
           >
             <span>criar {value}</span>
@@ -183,8 +183,8 @@ export function Autocomplete({
           <li
             key={`${item.value}${index}`}
             {...getItemProps({ item, index })}
-            className={`cursor-pointer rounded-md px-2 py-1 text-sm font-semibold text-gray-500 hover:bg-gray-50 ${
-              highlightedIndex === index ? `bg-gray-50` : ""
+            className={`cursor-pointer rounded-md px-2 py-1 text-sm font-semibold ${
+              highlightedIndex === index ? `bg-zinc-400/10` : ""
             }`}
           >
             <span>{item.label}</span>

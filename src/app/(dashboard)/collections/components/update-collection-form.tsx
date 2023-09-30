@@ -21,12 +21,13 @@ import { useState } from "react";
 import { useAction } from "~/lib/use-action";
 import { useUploadThing } from "~/lib/uploadthing";
 import { type CollectionSchema, collectionSchema } from "../schema";
-import { useOrganization, useUser } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/nextjs";
 import { type Image, type Collection } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { toast } from "~/components/ui/use-toast";
 import { updateCollectionAction } from "../actions/update-collection-action";
 import { deleteImagesAction } from "../actions/delete-images-action";
+import { useServerAction } from "~/lib/actions/use-action";
 
 type CollectionWithParentAndImage = Collection & {
   parents: Collection[];
@@ -39,9 +40,10 @@ type Props = {
 };
 
 export function UpdateCollectionForm({ collections, collection }: Props) {
-  const { user } = useUser();
   const { organization } = useOrganization();
-  const { mutate, isLoading } = useAction(updateCollectionAction);
+
+  const { mutate, isLoading } = useServerAction(updateCollectionAction);
+
   const images = useAction(deleteImagesAction);
   const router = useRouter();
 
@@ -52,8 +54,6 @@ export function UpdateCollectionForm({ collections, collection }: Props) {
       name: collection.name,
       slug: collection.slug,
       description: collection.description ?? "",
-      store: organization?.id,
-      user: user?.id,
     },
     resolver: zodResolver(collectionSchema),
   });
@@ -72,35 +72,29 @@ export function UpdateCollectionForm({ collections, collection }: Props) {
   }));
 
   const onSubmit = () => {
-    mutate(
-      {
-        ...form.getValues(),
-        store: String(organization?.id),
-        user: String(user?.id),
-      },
-      {
-        onSuccess: async (data) => {
+    mutate(form.getValues(), {
+      async onSuccess(data) {
+        if (selectedFiles.length > 0) {
           await startUpload(selectedFiles, { collection: data?.id as string });
+        }
 
-          toast({
-            title: "Coleção Alterada",
-            description: `A coleção ${data?.name} foi alterada.`,
-            className: "shadow-none p-3",
-          });
+        toast({
+          title: "Coleção Alterada",
+          description: `A coleção ${data?.name} foi alterada.`,
+          className: "shadow-none p-3",
+        });
 
-          router.refresh();
-          router.push("/collections");
-        },
-        onError: () => {
-          toast({
-            title: "Erro",
-            description:
-              "Ocorreu um erro ao tentar alterar sua coleção, tente novamente.",
-            className: "shadow-none p-3",
-          });
-        },
+        router.push("/collections");
       },
-    );
+      onError: () => {
+        toast({
+          title: "Erro",
+          description:
+            "Ocorreu um erro ao tentar alterar sua coleção, tente novamente.",
+          className: "shadow-none p-3",
+        });
+      },
+    });
   };
 
   return (

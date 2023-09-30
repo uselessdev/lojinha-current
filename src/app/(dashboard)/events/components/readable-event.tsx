@@ -10,20 +10,22 @@ export function ReadableEvent(props: {
   action: EventActions;
   createdAt: Date;
 }) {
-  const { membershipList, isLoaded, organization } = useOrganization({
-    membershipList: {},
+  const { memberships, organization } = useOrganization({ memberships: {} });
+
+  if (memberships?.isLoading) {
+    return (
+      <span className="inline-block h-5 w-full animate-pulse rounded-sm bg-foreground/10" />
+    );
+  }
+
+  const user = memberships?.data?.find(({ publicUserData }) => {
+    return publicUserData.userId === props.user;
   });
-  const user = membershipList?.find(
-    ({ publicUserData }) => publicUserData.userId === props.user,
-  );
 
   return (
-    <p className="text-zinc-700">
+    <p>
       <strong className="font-medium">
-        {user && isLoaded
-          ? user?.publicUserData.firstName
-          : `🤖 ${organization?.name}`}
-        {": "}
+        {user ? user?.publicUserData.firstName : `🤖 ${organization?.name}`}{" "}
       </strong>
       {getAction(props.action)}{" "}
       {intlFormatDistance(props.createdAt, new Date(), { locale: "pt-BR" })}

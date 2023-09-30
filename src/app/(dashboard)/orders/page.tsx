@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs";
-import { Card, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { db } from "~/lib/database";
 import { ListCustomerOrders } from "../customers/[id]/orders/components/list-customer-orders-table";
 
@@ -41,6 +41,14 @@ export default async function OrdersPage() {
       <CardHeader>
         <CardTitle>Pedidos</CardTitle>
       </CardHeader>
+
+      {orders.length <= 0 ? (
+        <CardContent>
+          <p className="text-xs text-gray-500">
+            Você ainda não tem nenhum pedido.
+          </p>
+        </CardContent>
+      ) : null}
 
       {orders.length > 0 ? <ListCustomerOrders orders={orders} /> : null}
     </Card>

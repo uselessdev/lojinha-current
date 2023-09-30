@@ -26,7 +26,7 @@ export default async function CustomersPage() {
 
       {customers.length <= 0 ? (
         <CardContent>
-          <p className="text-sm font-medium text-zinc-600">
+          <p className="text-xs text-zinc-500">
             Você ainda não tem nenhum cliente.
           </p>
         </CardContent>

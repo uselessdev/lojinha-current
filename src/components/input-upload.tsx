@@ -43,6 +43,7 @@ export function InputUpload({
     accept: {
       "image/jpg": [".jpeg", ".jpg"],
       "image/png": [".png"],
+      "image/avif": [".avif"],
     },
     maxSize: 2 / 1e-6, // <- maxSize to 2mb,
     onDrop,
@@ -50,16 +51,19 @@ export function InputUpload({
 
   return (
     <section
-      className={clsx("w-full rounded-md bg-gray-50 p-2", {
-        "ring-2 ring-gray-700 ring-offset-2": isDragActive,
-      })}
+      className={clsx(
+        "w-full rounded-md border border-input bg-background p-2",
+        {
+          "ring-2 ring-gray-700 ring-offset-2": isDragActive,
+        },
+      )}
     >
       <div {...getRootProps({ className: "dropzone min-h-[160px]" })}>
         <input {...getInputProps()} />
 
         {files.length <= 0 ? (
           <div className="grid min-h-[160px] place-content-center">
-            <p className="h-full w-full text-center text-sm text-gray-400">
+            <p className="h-full w-full text-center text-sm">
               Selecione ou arraste seus arquivos aqui.
             </p>
           </div>

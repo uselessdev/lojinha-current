@@ -1,66 +1,48 @@
 "use server";
 
-import { type ActionReturnType } from "~/lib/use-action";
-import { collectionSchema, type CollectionSchema } from "../schema";
-import { type Collection } from "@prisma/client";
+import { createServerAction } from "~/lib/actions/create-action";
+import { collectionSchema } from "../schema";
 import { db } from "~/lib/database";
 import { svix } from "~/lib/svix";
+import { revalidatePath } from "next/cache";
 
-export async function createCollectionAction(
-  data: CollectionSchema,
-): ActionReturnType<Collection> {
-  const payload = collectionSchema.safeParse(data);
+export const createCollectionAction = createServerAction({
+  schema: collectionSchema,
+  handler: async ({ parents, ...payload }, ctx) => {
+    try {
+      const collection = await db.$transaction(async (tx) => {
+        const result = await tx.collection.create({
+          data: {
+            ...payload,
+            store: ctx.store,
+            parents: {
+              connect: parents?.map((id) => ({ id })),
+            },
+          },
+        });
 
-  if (!payload.success) {
-    return {
-      status: "error",
-      error:
-        `${payload.error.issues
-          .at(0)
-          ?.path.join(".")}: "${payload.error.issues.at(0)?.message}"` ?? "",
-    };
-  }
+        await db.event.create({
+          data: {
+            action: "CREATE_COLLECTION",
+            payload: { parents, ...payload },
+            user: ctx.user,
+            store: ctx.store,
+          },
+        });
 
-  try {
-    const { store, user, parents, ...data } = payload.data;
-
-    const collection = await db.collection.create({
-      data: {
-        store,
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        parents: {
-          connect: parents?.map((id) => ({ id })),
-        },
-      },
-    });
-
-    const webhook = await db.webhook.findFirst({
-      where: {
-        store,
-      },
-    });
-
-    if (collection) {
-      await svix.message.create(webhook?.sid as string, {
-        eventType: "collection.create",
-        payload: collection,
+        return result;
       });
 
-      await db.event.create({
-        data: {
-          user,
-          store,
-          action: "CREATE_COLLECTION",
-          payload: data,
-        },
+      await svix.message.create(ctx.wh as string, {
+        eventType: "collections.create",
+        payload: { collection },
       });
+
+      revalidatePath("/collections", "page");
+
+      return { success: true, data: collection };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
     }
-
-    return { status: "success", data: collection };
-  } catch (error) {
-    console.error("create collection failed: ", error);
-    return { status: "error", error: (error as Error).message };
-  }
-}
+  },
+});

@@ -8,88 +8,102 @@ import {
   useSession,
 } from "@clerk/nextjs";
 import Link from "next/link";
-import * as React from "react";
+import { dark } from "@clerk/themes";
 import { redirect, usePathname } from "next/navigation";
-import Image from "next/image";
-import { PageHeader } from "~/components/page-header";
-import { menu } from "./menu";
 import clsx from "clsx";
+import { twMerge } from "tailwind-merge";
+import { Logo } from "~/components/logo";
+import { menu } from "./menu";
+import { ThemeToggle } from "~/components/theme-toggle";
+import { useTheme } from "next-themes";
 import { Toaster } from "~/components/ui/toaster";
 
 export default function DashboardLayout({
   children,
-}: React.PropsWithChildren<unknown>) {
-  const store = useOrganization();
-  const session = useSession();
+}: {
+  children: React.ReactNode;
+}) {
+  const { theme } = useTheme();
 
+  const { organization } = useOrganization();
+  const { isSignedIn, isLoaded } = useSession();
   const pathname = usePathname();
 
-  if (!session.isSignedIn && session.isLoaded) {
+  if (isLoaded && !isSignedIn) {
     return redirect("/");
+  }
+
+  if (!organization) {
+    return (
+      <div className="grid h-[100dvh] w-full place-content-center">
+        <CreateOrganization
+          appearance={{ baseTheme: theme === "dark" ? dark : undefined }}
+          afterCreateOrganizationUrl="/settings"
+        />
+      </div>
+    );
   }
 
   return (
     <>
-      {!store.organization ? (
-        <section className="grid h-screen w-full place-items-center">
-          <CreateOrganization afterCreateOrganizationUrl="/dashboard" />
-        </section>
-      ) : null}
+      <main className="grid h-[100dvh] w-full grid-cols-[300px_1fr]">
+        <aside className="grid grid-rows-[80px_1fr]">
+          <header className="flex h-20 flex-col justify-center px-6">
+            <h1 className="text-xs font-semibold">
+              <Link href="/">
+                <Logo className="h-8 w-8" />
+              </Link>
+            </h1>
+          </header>
 
-      {store.organization ? (
-        <div className="grid min-h-screen w-full grid-cols-[300px_1fr]">
-          <aside className="sticky top-0 grid grid-rows-[80px_1fr]">
-            <header className="flex h-20 flex-col justify-center px-6">
-              <h1 className="text-xs font-semibold text-gray-700">
-                <Link href="/">
-                  <Image
-                    src="/android-chrome-512x512.png"
-                    alt="lojinha.dev"
-                    width={24}
-                    height={24}
-                    className="h-w-6 w-6"
-                  />
-                </Link>
-              </h1>
-            </header>
+          <nav className="flex flex-col gap-2 px-4 pb-6">
+            {menu.map((menu) => (
+              <Link
+                key={menu.url}
+                href={menu.url}
+                className={twMerge(
+                  clsx(
+                    "flex items-center gap-2 rounded-md p-2 text-sm font-medium text-foreground/50 hover:bg-foreground/5",
+                    {
+                      "bg-foreground/5 text-foreground dark:bg-foreground/10":
+                        pathname.startsWith(menu.url),
+                    },
+                  ),
+                )}
+              >
+                {menu.icon} {menu.label}
+              </Link>
+            ))}
 
-            <nav className="flex flex-col gap-2 px-4">
-              {menu.map((item) => (
-                <Link
-                  key={item.url}
-                  href={item.url}
-                  className={clsx(
-                    `flex items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold text-gray-400 hover:bg-gray-50`,
-                    { "text-gray-800": pathname.startsWith(item.url) },
-                  )}
-                >
-                  {item.icon} {item.label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
+            <div className="mt-auto px-2">
+              <ThemeToggle />
+            </div>
+          </nav>
+        </aside>
 
-          <section className="grid min-h-screen w-full grid-rows-[80px_1fr]">
-            <PageHeader>
-              <OrganizationSwitcher
-                hidePersonal
-                appearance={{
-                  elements: {
-                    organizationSwitcherPopoverActionButton__createOrganization:
-                      {
-                        display: "none",
-                      },
+        <section>
+          <header className="flex h-20 items-center justify-between pr-6">
+            <OrganizationSwitcher
+              hidePersonal
+              appearance={{
+                baseTheme: theme === "dark" ? dark : undefined,
+                elements: {
+                  organizationSwitcherPopoverActionButton__createOrganization: {
+                    display: "none",
                   },
-                }}
-              />
-              <UserButton />
-            </PageHeader>
-            <main className="h-[calc(100dvh-80px)] overflow-y-scroll pb-6 pr-6">
-              {children}
-            </main>
-          </section>
-        </div>
-      ) : null}
+                },
+              }}
+            />
+            <UserButton
+              appearance={{
+                baseTheme: theme === "dark" ? dark : undefined,
+              }}
+            />
+          </header>
+
+          <div className="h-[calc(100dvh-80px)] pb-6 pr-6">{children}</div>
+        </section>
+      </main>
 
       <Toaster />
     </>

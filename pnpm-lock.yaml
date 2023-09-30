@@ -14,6 +14,9 @@ dependencies:
   '@clerk/nextjs':
     specifier: ^4.24.2
     version: 4.24.2(next@13.5.3)(react-dom@18.2.0)(react@18.2.0)
+  '@clerk/themes':
+    specifier: ^1.7.6
+    version: 1.7.6(react@18.2.0)
   '@fnando/cnpj':
     specifier: ^1.0.2
     version: 1.0.2
@@ -92,6 +95,9 @@ dependencies:
   next:
     specifier: 13.5.3
     version: 13.5.3(react-dom@18.2.0)(react@18.2.0)
+  next-themes:
+    specifier: ^0.2.1
+    version: 0.2.1(next@13.5.3)(react-dom@18.2.0)(react@18.2.0)
   react:
     specifier: 18.2.0
     version: 18.2.0
@@ -274,6 +280,15 @@ packages:
       js-cookie: 3.0.1
       react: 18.2.0
       swr: 2.2.0(react@18.2.0)
+    dev: false
+
+  /@clerk/themes@1.7.6(react@18.2.0):
+    resolution: {integrity: sha512-K3nxz3PZX52GmICqKKg/PJ2xtxTOw96Tjxnsb/T4syxMyLmoBBkTnL3Jx96D6zsvSblD+Ujb23z5epSeyQiwtQ==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      react: '>=16'
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /@clerk/types@3.52.1:
@@ -4103,6 +4118,18 @@ packages:
   /natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
+
+  /next-themes@0.2.1(next@13.5.3)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-B+AKNfYNIzh0vqQQKqQItTS8evEouKD7H5Hj3kmuPERwddR2TxvDSFZuTj6T7Jfn1oyeUyJMydPl1Bkxkh0W7A==}
+    peerDependencies:
+      next: '*'
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      next: 13.5.3(react-dom@18.2.0)(react@18.2.0)
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
 
   /next@13.5.3(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-4Nt4HRLYDW/yRpJ/QR2t1v63UOMS55A38dnWv3UDOWGezuY0ZyFO1ABNbD7mulVzs9qVhgy2+ppjdsANpKP1mg==}

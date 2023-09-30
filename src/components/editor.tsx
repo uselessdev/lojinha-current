@@ -51,7 +51,7 @@ export function Editor({ initialValue = "", onChange, label }: Props) {
         <EditorContent
           id="editor"
           editor={editor}
-          className="flex min-h-[80px] w-full rounded-md bg-gray-50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-gray-700 focus-within:ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-gray-700 focus-within:ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
       </FormControl>
     </FormItem>
@@ -150,7 +150,7 @@ function EditorMenu({ editor }: { editor: TEditor | null }) {
       {menu(editor).map(({ id, items }) => (
         <div
           key={id}
-          className="flex gap-1 border-r border-slate-100 pr-3 last:border-r-0"
+          className="flex gap-1 border-r border-input pr-3 last:border-r-0"
         >
           {items.map((item) => {
             const active =
@@ -167,8 +167,8 @@ function EditorMenu({ editor }: { editor: TEditor | null }) {
                 key={item.name}
                 type="button"
                 onClick={item.command}
-                className={`flex h-8 w-8 items-center justify-center rounded-md outline-none hover:bg-gray-100 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
-                  active ? "bg-gray-50" : ""
+                className={`flex h-8 w-8 items-center justify-center rounded-md outline-none hover:bg-foreground/5 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
+                  active ? "bg-gray-100/10" : ""
                 }`}
               >
                 {item.icon}
