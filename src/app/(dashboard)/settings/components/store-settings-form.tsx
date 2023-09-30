@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -17,11 +17,10 @@ import { Button } from "~/components/ui/button";
 import { type StoreSchema, storeSchema } from "../schema";
 import { Autocomplete } from "~/components/autocomplete";
 import { type Email, type Store } from "@prisma/client";
-import { useAction } from "~/lib/use-action";
 import { updateStoreAction } from "../actions/update-store-action";
 import { toast } from "~/components/ui/use-toast";
-import { useRouter } from "next/navigation";
 import * as CNPJ from "@fnando/cnpj";
+import { useServerAction } from "~/lib/actions/use-action";
 
 type Props = {
   store: (Store & { emails: Pick<Email, "address">[] }) | null;
@@ -32,8 +31,7 @@ export function StoreSettingsForm({ store }: Props) {
     membershipList: {},
   });
   const { user } = useUser();
-  const { mutate, isLoading } = useAction(updateStoreAction);
-  const router = useRouter();
+  const { mutate, isLoading } = useServerAction(updateStoreAction);
 
   const members =
     membershipList?.map((member) => ({
@@ -74,16 +72,14 @@ export function StoreSettingsForm({ store }: Props) {
     resolver: zodResolver(storeSchema),
   });
 
-  const onSubmit: SubmitHandler<StoreSchema> = (data) => {
-    mutate(data, {
+  const onSubmit = () => {
+    mutate(form.getValues(), {
       onSuccess: () => {
         toast({
           title: "Alterações Salvas",
           description: "As informações da sua loja, foram alteradas.",
           className: "shadow-none p-3",
         });
-
-        router.refresh();
       },
     });
   };
