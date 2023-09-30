@@ -18,30 +18,25 @@ import { Autocomplete } from "~/components/autocomplete";
 import { Editor } from "~/components/editor";
 import { InputUpload } from "~/components/input-upload";
 import { useState } from "react";
-import { useAction } from "~/lib/use-action";
 import { createCollectionAction } from "../actions/create-collection-action";
 import { useUploadThing } from "~/lib/uploadthing";
 import { type CollectionSchema, collectionSchema } from "../schema";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { type Collection } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { toast } from "~/components/ui/use-toast";
+import { useServerAction } from "~/lib/actions/use-action";
 
 type Props = {
   collections: Collection[];
 };
 
 export function CreateCollectionForm({ collections }: Props) {
-  const { user } = useUser();
-  const { organization } = useOrganization();
-  const { mutate, isLoading } = useAction(createCollectionAction);
+  const { mutate, isLoading } = useServerAction(createCollectionAction);
   const router = useRouter();
 
   const form = useForm<CollectionSchema>({
     mode: "all",
     defaultValues: {
-      store: organization?.id,
-      user: user?.id,
       name: "",
     },
     resolver: zodResolver(collectionSchema),
@@ -56,35 +51,32 @@ export function CreateCollectionForm({ collections }: Props) {
   }));
 
   const onSubmit = () => {
-    mutate(
-      {
-        ...form.getValues(),
-        store: String(organization?.id),
-        user: String(user?.id),
-      },
-      {
-        onSuccess: async (data) => {
-          await startUpload(selectedFiles, { collection: data?.id as string });
-
-          toast({
-            title: "Nova coleção",
-            description: `A coleção ${data?.name} foi adicionada.`,
-            className: "shadow-none p-3",
+    mutate(form.getValues(), {
+      async onSuccess(data) {
+        if (selectedFiles.length > 0) {
+          await startUpload(selectedFiles, {
+            collection: data?.id as string,
           });
+        }
 
-          router.refresh();
-          router.push("/collections");
-        },
-        onError: () => {
-          toast({
-            title: "Erro",
-            description:
-              "Ocorreu um erro ao tentar criar sua coleção, tente novamente.",
-            className: "shadow-none p-3",
-          });
-        },
+        toast({
+          title: "Nova coleção",
+          description: `A coleção ${data?.name} foi adicionada.`,
+          className: "shadow-none p-3",
+        });
+
+        router.push(`/collections`);
       },
-    );
+
+      onError: () => {
+        toast({
+          title: "Erro",
+          description:
+            "Ocorreu um erro ao tentar criar sua coleção, tente novamente.",
+          className: "shadow-none p-3",
+        });
+      },
+    });
   };
 
   return (

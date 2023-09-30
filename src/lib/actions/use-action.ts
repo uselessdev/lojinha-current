@@ -31,7 +31,7 @@ export function useServerAction<A, T>(action: Action<A, T>) {
         }
       });
     },
-    [],
+    [action],
   );
 
   return {

@@ -34,11 +34,8 @@ import {
 } from "~/components/ui/table";
 import { formatter } from "~/lib/utils";
 import NextImage from "next/image";
-import { useAction } from "~/lib/use-action";
 import { archiveCollectionAction } from "../actions/archive-collection-action";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { toast } from "~/components/ui/use-toast";
-import { useRouter } from "next/navigation";
 import { restoreCollectionAction } from "../actions/restore-collection-action";
 import { useState } from "react";
 import {
@@ -53,6 +50,7 @@ import {
 } from "~/components/ui/alert-dialog";
 import { useDisclosure } from "~/lib/use-disclosure";
 import { destroyCollectionAction } from "../actions/destroy-collection-action";
+import { useServerAction } from "~/lib/actions/use-action";
 
 type CollectionWithParentsAndImages = Collection & {
   parents: Collection[];
@@ -66,14 +64,11 @@ type Props = {
 const column = createColumnHelper<CollectionWithParentsAndImages>();
 
 export function ListCollectionsTable({ collections }: Props) {
-  const { user } = useUser();
-  const { organization } = useOrganization();
-  const router = useRouter();
   const [updating, setUpdating] = useState<string>();
 
-  const archive = useAction(archiveCollectionAction);
-  const restore = useAction(restoreCollectionAction);
-  const destroy = useAction(destroyCollectionAction);
+  const archive = useServerAction(archiveCollectionAction);
+  const restore = useServerAction(restoreCollectionAction);
+  const destroy = useServerAction(destroyCollectionAction);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -163,11 +158,7 @@ export function ListCollectionsTable({ collections }: Props) {
                       setUpdating(collection.id);
 
                       restore.mutate(
-                        {
-                          id: collection.id,
-                          user: String(user?.id),
-                          store: String(organization?.id),
-                        },
+                        { id: collection.id },
                         {
                           onSuccess: () => {
                             toast({
@@ -177,8 +168,6 @@ export function ListCollectionsTable({ collections }: Props) {
                             });
 
                             setUpdating(undefined);
-
-                            router.refresh();
                           },
                         },
                       );
@@ -194,11 +183,7 @@ export function ListCollectionsTable({ collections }: Props) {
                       setUpdating(collection.id);
 
                       archive.mutate(
-                        {
-                          id: collection.id,
-                          user: String(user?.id),
-                          store: String(organization?.id),
-                        },
+                        { id: collection.id },
                         {
                           onSuccess: () => {
                             toast({
@@ -208,7 +193,6 @@ export function ListCollectionsTable({ collections }: Props) {
                             });
 
                             setUpdating(undefined);
-                            router.refresh();
                           },
                         },
                       );
@@ -302,11 +286,7 @@ export function ListCollectionsTable({ collections }: Props) {
               disabled={destroy.isLoading}
               onClick={() => {
                 destroy.mutate(
-                  {
-                    id: String(updating),
-                    user: String(user?.id),
-                    store: String(organization?.id),
-                  },
+                  { id: String(updating) },
                   {
                     onSuccess: () => {
                       toast({
@@ -315,7 +295,6 @@ export function ListCollectionsTable({ collections }: Props) {
                         className: "shadow-none p-3",
                       });
 
-                      router.refresh();
                       setUpdating(undefined);
                       onClose();
                     },

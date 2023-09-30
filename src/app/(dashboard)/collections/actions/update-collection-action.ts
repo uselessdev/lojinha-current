@@ -1,58 +1,52 @@
 "use server";
 
-import { type ActionReturnType } from "~/lib/use-action";
-import { collectionSchema, type CollectionSchema } from "../schema";
-import { type Collection } from "@prisma/client";
+import { createServerAction } from "~/lib/actions/create-action";
+import { collectionSchema } from "../schema";
 import { db } from "~/lib/database";
+import { svix } from "~/lib/svix";
+import { revalidatePath } from "next/cache";
 
-export async function updateCollectionAction(
-  data: CollectionSchema,
-): ActionReturnType<Collection> {
-  const payload = collectionSchema.safeParse(data);
+export const updateCollectionAction = createServerAction({
+  schema: collectionSchema,
+  handler: async ({ parents, ...payload }, ctx) => {
+    try {
+      const collection = await db.$transaction(async (tx) => {
+        const collection = await tx.collection.update({
+          where: {
+            id: payload.id,
+            store: ctx.store,
+          },
+          data: {
+            ...payload,
+            parents: {
+              set: parents?.map((id) => ({ id })),
+            },
+            updatedAt: new Date(),
+          },
+        });
 
-  if (!payload.success) {
-    return {
-      status: "error",
-      error:
-        `${payload.error.issues
-          .at(0)
-          ?.path.join(".")}: "${payload.error.issues.at(0)?.message}"` ?? "",
-    };
-  }
+        await db.event.create({
+          data: {
+            action: "UPDATE_COLLECTION",
+            user: ctx.user,
+            store: ctx.store,
+            payload,
+          },
+        });
 
-  try {
-    const { user, store, id, ...data } = payload.data;
+        await svix.message.create(String(ctx.wh), {
+          eventType: "collections.update",
+          payload: collection,
+        });
 
-    const collection = await db.collection.update({
-      where: {
-        id,
-        store,
-      },
-      data: {
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        parents: {
-          set: data.parents?.map((id) => ({ id })),
-        },
-        updatedAt: new Date(),
-      },
-    });
-
-    if (collection) {
-      await db.event.create({
-        data: {
-          action: "UPDATE_COLLECTION",
-          payload: { ...data, id },
-          user,
-          store,
-        },
+        return collection;
       });
-    }
 
-    return { status: "success", data: collection };
-  } catch (err) {
-    console.error(`update collection failed: `, err);
-    return { status: "error", error: (err as Error).message };
-  }
-}
+      revalidatePath(`/collections`, "page");
+
+      return { success: true, data: collection };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  },
+});
