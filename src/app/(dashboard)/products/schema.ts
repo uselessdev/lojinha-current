@@ -13,8 +13,6 @@ export const productSchema = z.object({
   originalPrice: z.string().optional(),
   quantity: z.number().optional().default(1),
   sku: z.string().optional(),
-  store: z.string().min(1, "ID da loja é inválido"),
-  user: z.string().min(1, "ID do usuário é inválido"),
 });
 
 export type ProductSchema = z.infer<typeof productSchema>;

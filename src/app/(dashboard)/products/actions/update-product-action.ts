@@ -1,65 +1,58 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { formatter } from "~/lib/utils";
-import { type ProductSchema, productSchema } from "../schema";
-import { type ActionReturnType } from "~/lib/use-action";
-import { type Product } from "@prisma/client";
+import { createServerAction } from "~/lib/actions/create-action";
+import { productSchema } from "../schema";
 import { db } from "~/lib/database";
+import { formatter } from "~/lib/utils";
+import { svix } from "~/lib/svix";
+import { revalidatePath } from "next/cache";
 
-export async function updateProductAction(
-  data: ProductSchema,
-): ActionReturnType<Product> {
-  const input = productSchema.safeParse(data);
-
-  if (!input.success) {
-    return {
-      status: "error",
-      error:
-        `${input.error.issues.at(0)?.path.join(".")}: "${input.error.issues.at(
-          0,
-        )?.message}"` ?? "",
-    };
-  }
-
-  try {
-    const { user, store, id, ...data } = input.data;
-
-    const product = await db.product.update({
-      where: {
-        id,
-      },
-      data: {
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        originalPrice: formatter.number(data.description ?? ""),
-        price: formatter.number(data.price ?? ""),
-        quantity: data.quantity,
-        sku: data.sku,
-        status: data.status,
-        collections: {
-          set: data.collections.map((id) => ({ id })),
+export const updateProductAction = createServerAction({
+  schema: productSchema,
+  handler: async (
+    { id, collections, price, originalPrice, ...payload },
+    ctx,
+  ) => {
+    try {
+      const product = await db.product.update({
+        where: {
+          id,
+          store: ctx.store,
         },
-        updatedAt: new Date(),
-      },
-    });
-
-    if (product) {
-      await db.event.create({
         data: {
-          action: "UPDATE_PRODUCT",
-          payload: data,
-          store,
-          user,
+          ...payload,
+          updatedAt: new Date(),
+          price: formatter.number(price ?? ""),
+          originalPrice: formatter.number(originalPrice ?? ""),
+          collections: {
+            set: collections?.map((id) => ({ id })),
+          },
         },
       });
+
+      if (product) {
+        await svix.message.create(String(ctx.wh), {
+          eventType: "products.update",
+          payload: { product },
+        });
+
+        await db.event.create({
+          data: {
+            action: "UPDATE_PRODUCT",
+            payload: { ...payload, collections, price, originalPrice, id },
+            user: ctx.user,
+            store: ctx.store,
+          },
+        });
+      }
+
+      revalidatePath("/products", "page");
+
+      return { success: true, data: product };
+    } catch (error) {
+      console.error(error);
+
+      return { success: false, error: (error as Error).message };
     }
-
-    revalidatePath("/products");
-
-    return { status: "success", data: product };
-  } catch (error) {
-    return { status: "error", error: (error as Error).message };
-  }
-}
+  },
+});

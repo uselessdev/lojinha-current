@@ -34,9 +34,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { formatter } from "~/lib/utils";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { toast } from "~/components/ui/use-toast";
-import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,11 +46,11 @@ import {
   AlertDialogCancel,
 } from "~/components/ui/alert-dialog";
 import { type Collection, type Image, type Product } from "@prisma/client";
-import { useAction } from "~/lib/use-action";
 import { archiveProductAction } from "../actions/archive-product-action";
 import { restoreProductAction } from "../actions/restore-product-action";
 import { destroyProductAction } from "../actions/destroy-product-action";
 import { useDisclosure } from "~/lib/use-disclosure";
+import { useServerAction } from "~/lib/actions/use-action";
 
 type ProductWithCollection = Product & {
   collections: Collection[];
@@ -66,15 +64,12 @@ type Props = {
 const column = createColumnHelper<ProductWithCollection>();
 
 export function ListProductsTable({ products }: Props) {
-  const { organization } = useOrganization();
-  const { user } = useUser();
-  const router = useRouter();
   const [updating, setUpdating] = React.useState<string>();
   const { isOpen, onClose, onOpen } = useDisclosure();
 
-  const archive = useAction(archiveProductAction);
-  const restore = useAction(restoreProductAction);
-  const destroy = useAction(destroyProductAction);
+  const archive = useServerAction(archiveProductAction);
+  const restore = useServerAction(restoreProductAction);
+  const destroy = useServerAction(destroyProductAction);
 
   const columns = [
     column.accessor(({ name, deletedAt }) => ({ name, deletedAt }), {
@@ -120,7 +115,8 @@ export function ListProductsTable({ products }: Props) {
           <div className="flex flex-wrap gap-2">
             {collections.map((collection) => (
               <Badge
-                className="cursor-pointer bg-gray-100 text-gray-600 hover:bg-gray-200"
+                variant="secondary"
+                className="cursor-pointer"
                 key={collection.id}
               >
                 <Link href={`/collections/${collection.id}`}>
@@ -185,20 +181,15 @@ export function ListProductsTable({ products }: Props) {
                       setUpdating(product.id);
 
                       restore.mutate(
+                        { id: product.id },
                         {
-                          id: product.id,
-                          store: String(organization?.id),
-                          user: String(user?.id),
-                        },
-                        {
-                          onSuccess(data) {
+                          onSuccess() {
                             toast({
                               title: "Produto restaurado.",
-                              description: `O produto ${data?.name} foi restaurado.`,
+                              description: `O produto ${product.name} foi restaurado.`,
                               className: "shadow-none p-3",
                             });
 
-                            router.refresh();
                             setUpdating(undefined);
                           },
                         },
@@ -215,21 +206,16 @@ export function ListProductsTable({ products }: Props) {
                       setUpdating(product.id);
 
                       archive.mutate(
+                        { id: product.id },
                         {
-                          id: product.id,
-                          store: String(organization?.id),
-                          user: String(user?.id),
-                        },
-                        {
-                          onSuccess(data) {
+                          onSuccess() {
                             toast({
                               title: "Produto arquivado.",
-                              description: `O produto ${data?.name} foi arquivado`,
+                              description: `O produto ${product.name} foi arquivado`,
                               className: "shadow-none p-3",
                             });
 
                             setUpdating(undefined);
-                            router.refresh();
                           },
                         },
                       );
@@ -323,11 +309,7 @@ export function ListProductsTable({ products }: Props) {
               disabled={destroy.isLoading}
               onClick={() => {
                 destroy.mutate(
-                  {
-                    id: updating as string,
-                    user: String(user?.id),
-                    store: String(organization?.id),
-                  },
+                  { id: updating as string },
                   {
                     onSuccess: () => {
                       toast({
@@ -336,7 +318,6 @@ export function ListProductsTable({ products }: Props) {
                         className: "shadow-none p-3",
                       });
 
-                      router.refresh();
                       setUpdating(undefined);
                       onClose();
                     },

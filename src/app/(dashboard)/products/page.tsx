@@ -39,7 +39,7 @@ export default async function ProductsPage() {
 
       {products.length <= 0 ? (
         <CardContent>
-          <p className="text-xs text-gray-500">Nenhum produto encontrado.</p>
+          <p className="text-xs text-zinc-500">Nenhum produto encontrado.</p>
         </CardContent>
       ) : null}
 
