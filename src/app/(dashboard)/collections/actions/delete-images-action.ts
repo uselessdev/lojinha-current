@@ -1,34 +1,31 @@
 "use server";
 
 import { utapi } from "uploadthing/server";
+import { z } from "zod";
+import { createServerAction } from "~/lib/actions/create-action";
 import { db } from "~/lib/database";
-import { type ActionReturnType } from "~/lib/use-action";
 
-export async function deleteImagesAction({
-  key,
-  id,
-  store,
-}: {
-  key: string;
-  id: string;
-  store: string;
-}): ActionReturnType<string> {
-  try {
-    const result = await utapi.deleteFiles(key);
+export const deleteImagesAction = createServerAction({
+  schema: z.object({
+    key: z.string().min(1, "Image key is required"),
+    id: z.string().uuid("Image ID is required"),
+  }),
+  handler: async (payload, ctx) => {
+    try {
+      const result = await utapi.deleteFiles(payload.key);
 
-    if (result.success) {
-      await db.image.delete({
-        where: {
-          id,
-          key,
-          store,
-        },
-      });
+      if (result) {
+        await db.image.delete({
+          where: {
+            id: payload.id,
+            store: ctx.store,
+          },
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
     }
-
-    return { status: "success", data: "Imagem deletada" };
-  } catch (err) {
-    console.error(`failed to delete image "${key}":`, err);
-    return { status: "error", error: (err as Error).message };
-  }
-}
+  },
+});

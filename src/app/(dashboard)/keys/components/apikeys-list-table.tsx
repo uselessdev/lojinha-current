@@ -37,7 +37,7 @@ import {
 import { formatter } from "~/lib/utils";
 import { toast } from "~/components/ui/use-toast";
 import { type Key, type UnkeyResponse } from "../utils/fetch-api-keys";
-import { useClipboard } from "~/lib/use-clipboard";
+import { useClipboard } from "~/lib/hooks/use-clipboard";
 import { createApiKeyAction } from "../actions/create-api-key-action";
 import { revokeApiKeyAction } from "../actions/revoke-api-key-action";
 import { useServerAction } from "~/lib/actions/use-action";

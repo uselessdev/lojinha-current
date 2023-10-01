@@ -49,7 +49,7 @@ import { type Collection, type Image, type Product } from "@prisma/client";
 import { archiveProductAction } from "../actions/archive-product-action";
 import { restoreProductAction } from "../actions/restore-product-action";
 import { destroyProductAction } from "../actions/destroy-product-action";
-import { useDisclosure } from "~/lib/use-disclosure";
+import { useDisclosure } from "~/lib/hooks/use-disclosure";
 import { useServerAction } from "~/lib/actions/use-action";
 
 type ProductWithCollection = Product & {
