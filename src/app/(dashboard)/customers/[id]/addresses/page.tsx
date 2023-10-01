@@ -43,7 +43,9 @@ export default async function AddressesPage({ params }: Props) {
 
       {addresses.length <= 0 ? (
         <CardContent>
-          <p>Este cliente ainda não cadastrou nenhum endereço.</p>
+          <p className="text-xs text-zinc-500">
+            Este cliente ainda não cadastrou nenhum endereço.
+          </p>
         </CardContent>
       ) : null}
 

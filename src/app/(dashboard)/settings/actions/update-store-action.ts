@@ -1,76 +1,75 @@
 "use server";
 
-import { type ActionReturnType } from "~/lib/use-action";
-import { type StoreSchema, storeSchema } from "../schema";
-import { type Store } from "@prisma/client";
+import { createServerAction } from "~/lib/actions/create-action";
+import { storeSchema } from "../schema";
 import { db } from "~/lib/database";
+import { revalidatePath } from "next/cache";
 
-export async function updateStoreAction(
-  data: StoreSchema,
-): ActionReturnType<Store> {
-  const payload = storeSchema.safeParse(data);
-
-  if (!payload.success) {
-    return {
-      status: "error",
-      error:
-        `${payload.error.issues
-          .at(0)
-          ?.path.join(".")}: "${payload.error.issues.at(0)?.message}"` ?? "",
-    };
-  }
-
-  try {
-    const emails = await db.email.findMany({
-      where: {
-        store: payload.data.id,
-        address: {
-          notIn: payload.data.emails,
-        },
-      },
-      select: {
-        id: true,
-        address: true,
-      },
-    });
-
-    const store = await db.store.upsert({
-      where: {
-        id: payload.data.id ?? "",
-      },
-      create: {
-        cnpj: payload.data.cnpj,
-        name: payload.data.name,
-        store: payload.data.store,
-        url: payload.data.url,
-        emails: {
-          createMany: {
-            data: payload.data.emails.map((email) => ({
-              address: email.trim(),
-            })),
+export const updateStoreAction = createServerAction({
+  schema: storeSchema,
+  handler: async ({ emails, ...payload }, ctx) => {
+    try {
+      const exclude = await db.email.findMany({
+        where: {
+          store: ctx.store,
+          address: {
+            notIn: emails,
           },
         },
-      },
-      update: {
-        name: payload.data.name,
-        url: payload.data.url,
-        emails: {
-          createMany: {
-            data: payload.data.emails.map((email) => ({
-              address: email.trim(),
-            })),
-            skipDuplicates: true,
-          },
-          deleteMany: emails,
+        select: {
+          id: true,
+          address: true,
         },
-      },
-      include: {
-        emails: true,
-      },
-    });
+      });
 
-    return { status: "success", data: store };
-  } catch (error) {
-    return { status: "error", error: (error as Error).message };
-  }
-}
+      const store = await db.store.upsert({
+        where: {
+          id: payload.id ?? "",
+        },
+        create: {
+          ...payload,
+          emails: {
+            createMany: {
+              data: emails.map((email) => ({
+                address: email.trim(),
+              })),
+            },
+          },
+        },
+        update: {
+          name: payload.name,
+          url: payload.url,
+          emails: {
+            createMany: {
+              data: emails.map((email) => ({
+                address: email.trim(),
+              })),
+              skipDuplicates: true,
+            },
+            deleteMany: exclude,
+          },
+        },
+        include: {
+          emails: true,
+        },
+      });
+
+      if (store) {
+        await db.event.create({
+          data: {
+            action: "UPDATE_STORE",
+            payload: { emails, ...payload },
+            user: ctx.user,
+            store: ctx.store,
+          },
+        });
+      }
+
+      revalidatePath("/settings", "page");
+
+      return { success: true, data: store };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  },
+});

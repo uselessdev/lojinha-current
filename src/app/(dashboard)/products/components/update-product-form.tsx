@@ -1,6 +1,5 @@
 "use client";
 
-import { useOrganization } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { type ProductSchema, productSchema } from "../schema";
@@ -8,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Product, type Collection, type Image } from "@prisma/client";
 import { useUploadThing } from "~/lib/uploadthing";
-import { useAction } from "~/lib/use-action";
 import { updateProductAction } from "../actions/update-product-action";
 import { toast } from "~/components/ui/use-toast";
 import {
@@ -43,9 +41,8 @@ type Props = {
 };
 
 export function UpdateProductForm({ collections, product }: Props) {
-  const { organization } = useOrganization();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const images = useAction(deleteImagesAction);
+  const images = useServerAction(deleteImagesAction);
   const router = useRouter();
 
   const form = useForm<ProductSchema>({
@@ -220,7 +217,6 @@ export function UpdateProductForm({ collections, product }: Props) {
                         {
                           id: image?.id ?? "",
                           key: image?.key ?? "",
-                          store: String(organization?.id),
                         },
                         {
                           onSuccess: () => router.refresh(),

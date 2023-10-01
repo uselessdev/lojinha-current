@@ -18,10 +18,8 @@ import { Autocomplete } from "~/components/autocomplete";
 import { Editor } from "~/components/editor";
 import { InputUpload } from "~/components/input-upload";
 import { useState } from "react";
-import { useAction } from "~/lib/use-action";
 import { useUploadThing } from "~/lib/uploadthing";
 import { type CollectionSchema, collectionSchema } from "../schema";
-import { useOrganization } from "@clerk/nextjs";
 import { type Image, type Collection } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { toast } from "~/components/ui/use-toast";
@@ -40,11 +38,8 @@ type Props = {
 };
 
 export function UpdateCollectionForm({ collections, collection }: Props) {
-  const { organization } = useOrganization();
-
   const { mutate, isLoading } = useServerAction(updateCollectionAction);
-
-  const images = useAction(deleteImagesAction);
+  const images = useServerAction(deleteImagesAction);
   const router = useRouter();
 
   const form = useForm<CollectionSchema>({
@@ -164,7 +159,6 @@ export function UpdateCollectionForm({ collections, collection }: Props) {
                         {
                           id: image?.id ?? "",
                           key: image?.key ?? "",
-                          store: String(organization?.id),
                         },
                         {
                           onSuccess: () => router.refresh(),

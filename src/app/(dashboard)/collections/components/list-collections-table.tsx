@@ -48,7 +48,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { useDisclosure } from "~/lib/use-disclosure";
+import { useDisclosure } from "~/lib/hooks/use-disclosure";
 import { destroyCollectionAction } from "../actions/destroy-collection-action";
 import { useServerAction } from "~/lib/actions/use-action";
 

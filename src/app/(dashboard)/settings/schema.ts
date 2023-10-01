@@ -6,12 +6,7 @@ export const storeSchema = z.object({
   store: z.string().min(1, "ID da loja é inválido"),
   name: z.string().min(1, "Sua loja precisa de um nome válido"),
   url: z.string().min(1, "URL da loja é inválido"),
-  emails: z.array(
-    z.preprocess(
-      (value) => String(value).trim(),
-      z.string().email("Informe apenas e-mails válidos"),
-    ),
-  ),
+  emails: z.array(z.string().email("Informe apenas e-mails válidos")),
   cnpj: z
     .string()
     .refine((value: string) => CNPJ.isValid(value), "Informe um CNPJ válido."),
