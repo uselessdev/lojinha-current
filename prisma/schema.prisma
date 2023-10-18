@@ -89,12 +89,49 @@ model Product {
   collections Collection[]
   orders      OrderProduct[]
   images      Image[]
+  variants    ProductVariants[]
+  options     ProductOptions[]
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
   @@map("products")
+}
+
+model ProductVariants {
+  id        String   @id @default(uuid())
+  store     String
+  productId String   @map("product_id")
+  name      String
+  values    String[]
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("product_variants")
+}
+
+model ProductOptions {
+  id            String  @id @default(uuid())
+  productId     String  @map("product_id")
+  store         String
+  name          String
+  price         Int?
+  originalPrice Int?
+  quantity      Int?
+  sku           String?
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("product_options")
 }
 
 enum OrderStatus {
