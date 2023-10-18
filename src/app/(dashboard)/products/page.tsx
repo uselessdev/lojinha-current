@@ -25,6 +25,8 @@ export default async function ProductsPage() {
     },
   });
 
+  console.log(products);
+
   return (
     <Card className="pb-6">
       <CardHeader className="flex-row items-center justify-between">

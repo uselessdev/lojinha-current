@@ -101,9 +101,7 @@ export default function DashboardLayout({
             />
           </header>
 
-          <div className="h-[calc(100dvh-80px)] overflow-y-scroll pb-6 pr-6">
-            {children}
-          </div>
+          <div className="pb-6 pr-6">{children}</div>
         </section>
       </main>
 
