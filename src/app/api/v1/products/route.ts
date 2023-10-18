@@ -15,6 +15,8 @@ export async function GET(request: Request) {
     include: {
       images: true,
       collections: true,
+      options: true,
+      variants: true,
       _count: true,
     },
   });

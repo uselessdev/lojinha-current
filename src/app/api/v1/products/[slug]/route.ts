@@ -22,6 +22,9 @@ export async function GET(request: Request, { params }: Params) {
     },
     include: {
       images: true,
+      collections: true,
+      options: true,
+      variants: true,
       _count: true,
     },
   });
