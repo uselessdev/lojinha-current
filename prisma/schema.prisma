@@ -45,6 +45,7 @@ model Event {
   store     String?
   createdAt DateTime     @default(now()) @map("created_at")
 
+  @@index([action])
   @@map("events")
 }
 
@@ -64,6 +65,8 @@ model Collection {
   updatedAt DateTime? @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@unique([store, slug])
+  @@index([slug])
   @@map("collections")
 }
 
@@ -223,7 +226,7 @@ model Email {
   store   String
   address String @unique
 
-  storeId Store @relation(fields: [store], references: [id])
+  storeId Store @relation(fields: [store], references: [store])
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
@@ -235,7 +238,7 @@ model Email {
 
 model Store {
   id     String  @id @default(uuid())
-  store  String
+  store  String  @unique
   name   String
   url    String
   emails Email[]
@@ -245,7 +248,7 @@ model Store {
   updatedAt DateTime? @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  @@index([store])
+  @@index([store, cnpj])
   @@map("stores")
 }
 
@@ -268,5 +271,6 @@ model Webhook {
   store String
   sid   String
 
+  @@index([store])
   @@map("webhooks")
 }
