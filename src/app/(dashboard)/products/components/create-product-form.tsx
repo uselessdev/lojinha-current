@@ -1,12 +1,7 @@
 "use client";
 
 import { type Collection } from "@prisma/client";
-import {
-  useFieldArray,
-  useForm,
-  useFormContext,
-  useWatch,
-} from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { type ProductSchema, productSchema } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -45,61 +40,12 @@ import { useServerAction } from "~/lib/actions/use-action";
 import { createProductAction } from "../actions/create-product-action";
 import { toast } from "~/components/ui/use-toast";
 import { useRouter } from "next/navigation";
+import { ProductVariantValues } from "./product-variant-values";
+import { cartesian } from "../utils";
 
 type Props = {
   collections: Collection[];
 };
-
-const cartesian = <T extends (string | number)[][]>(...list: T): T => {
-  return list.reduce<T>(
-    (acc, arr) => acc.flatMap((f) => arr.map((x) => [...f, x])) as T,
-    [[]] as unknown as T,
-  );
-};
-
-function ProductVariantValues(props: { index: number }) {
-  const { control } = useFormContext();
-
-  const values = useFieldArray({
-    control,
-    name: `variants[${props.index}].values`,
-  });
-
-  return (
-    <div className="space-y-3">
-      {values.fields.map((value, index) => (
-        <FormField
-          key={value.id}
-          name={`variants.${props.index}.values.${index}`}
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-2 space-y-0">
-              <FormControl>
-                <Input {...field} placeholder="Valor" />
-              </FormControl>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => values.remove(index)}
-              >
-                <span className="sr-only">Remover Valor</span>
-                <Trash2Icon />
-              </Button>
-            </FormItem>
-          )}
-        />
-      ))}
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={() => values.append("")}
-      >
-        <PlusIcon className="h-4 w-4" /> Adicionar Valor
-      </Button>
-    </div>
-  );
-}
 
 export function CreateProductForm({ collections }: Props) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);

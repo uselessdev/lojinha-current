@@ -1,53 +1,49 @@
-import { Trash2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "~/components/ui/button";
-import { FormField, FormItem } from "~/components/ui/form";
+import { FormControl, FormField, FormItem } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 
-export function VariantValues(props: { index: number }) {
-  const { control, setValue } = useFormContext();
+export function ProductVariantValues(props: { index: number }) {
+  const { control } = useFormContext();
 
   const values = useFieldArray({
     control,
-    name: `variants[${props.index}].options`,
+    name: `variants[${props.index}].values`,
   });
 
   return (
-    <div className="space-y-2">
-      {values.fields.map((field, index) => (
+    <div className="space-y-3">
+      {values.fields.map((value, index) => (
         <FormField
-          key={field.id}
-          name={`variants[${props.index}].options[${index}]`}
-          render={({ field: option }) => (
+          key={value.id}
+          name={`variants.${props.index}.values.${index}`}
+          render={({ field }) => (
             <FormItem className="flex items-center gap-2 space-y-0">
-              <Input
-                {...option}
-                onChange={({ target }) => {
-                  setValue(
-                    `variants.${props.index}.options[${index}]`,
-                    target.value,
-                  );
-                  setValue(`options.${index}.name`, target.value);
-                }}
-                onBlur={(event) => {
-                  if (event.target.value.length <= 0) {
-                    values.remove(index);
-                  } else {
-                    values.append("");
-                  }
-                }}
-              />
+              <FormControl>
+                <Input {...field} placeholder="Valor" />
+              </FormControl>
               <Button
+                type="button"
                 variant="ghost"
+                size="icon"
                 onClick={() => values.remove(index)}
-                className="mt-0"
               >
+                <span className="sr-only">Remover Valor</span>
                 <Trash2Icon />
               </Button>
             </FormItem>
           )}
         />
       ))}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => values.append("")}
+      >
+        <PlusIcon className="h-4 w-4" /> Adicionar Valor
+      </Button>
     </div>
   );
 }
