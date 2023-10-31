@@ -10,7 +10,16 @@ import { revalidatePath } from "next/cache";
 export const createProductAction = createServerAction({
   schema: productSchema,
   handler: async (
-    { collections, price, originalPrice, variants, options, ...payload },
+    {
+      collections,
+      price,
+      originalPrice,
+      variants,
+      options,
+      sku,
+      quantity,
+      ...payload
+    },
     ctx,
   ) => {
     try {
@@ -18,14 +27,35 @@ export const createProductAction = createServerAction({
         const product = await tx.product.create({
           data: {
             ...payload,
-            price: formatter.number(price ?? ""),
-            originalPrice: formatter.number(originalPrice ?? ""),
             store: ctx.store,
             collections: {
               connect: collections?.map((id) => ({ id })),
             },
           },
         });
+
+        if (!variants?.length) {
+          await tx.productVariants.create({
+            data: {
+              name: "default",
+              store: ctx.store,
+              values: ["default"],
+              productId: product.id,
+            },
+          });
+
+          await tx.productOptions.create({
+            data: {
+              name: "default",
+              store: ctx.store,
+              price: formatter.number(price ?? ""),
+              originalPrice: formatter.number(originalPrice ?? ""),
+              sku: sku,
+              productId: product.id,
+              quantity: quantity,
+            },
+          });
+        }
 
         if (variants && variants?.length > 0) {
           await tx.productVariants.createMany({

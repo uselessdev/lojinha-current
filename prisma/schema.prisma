@@ -78,16 +78,12 @@ enum ProductStatus {
 }
 
 model Product {
-  id            String        @id @default(uuid())
-  store         String
-  status        ProductStatus @default(DRAFT)
-  name          String
-  slug          String
-  description   String?       @db.Text
-  price         Int?
-  originalPrice Int?          @map("original_price")
-  quantity      Int?
-  sku           String?
+  id          String        @id @default(uuid())
+  store       String
+  status      ProductStatus @default(DRAFT)
+  name        String
+  slug        String
+  description String?       @db.Text
 
   collections Collection[]
   orders      OrderProduct[]
@@ -109,7 +105,7 @@ model ProductVariants {
   name      String
   values    String[]
 
-  product Product @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
@@ -128,7 +124,7 @@ model ProductOptions {
   quantity      Int?
   sku           String?
 
-  product Product @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
@@ -170,8 +166,9 @@ model Order {
 }
 
 model OrderProduct {
-  productId String @map("product_id")
-  orderId   String @map("order_id")
+  productId String  @map("product_id")
+  optionId  String? @map("option_id")
+  orderId   String  @map("order_id")
   quantity  Int
 
   product Product @relation(fields: [productId], references: [id])
