@@ -106,7 +106,7 @@ export function CreateProductForm({ collections }: Props) {
 
   useEffect(() => {
     const options = cartesian(...watched.map(({ values }) => values)).map(
-      (option) => option.join(`/`),
+      (option) => option.map((value) => value.trim()).join(`/`),
     );
 
     if (options.every(Boolean)) {

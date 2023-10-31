@@ -66,6 +66,28 @@ export function UpdateProductForm({ collections, product }: Props) {
   const images = useServerAction(deleteImagesAction);
   const router = useRouter();
 
+  const defaultProductOption = product.options
+    .map(({ price, originalPrice, quantity, sku, ...option }) => ({
+      ...option,
+      price: formatter.currency(price ?? 0),
+      originalPrice: formatter.currency(originalPrice ?? 0),
+      quantity: quantity ?? 0,
+      sku: sku ?? "",
+    }))
+    .find(({ name }) => name === "default");
+
+  const defaultProductVariants = product.variants.find(
+    ({ name }) => name === "default",
+  );
+
+  const customProductVariants = product.variants.filter(
+    ({ name }) => name !== "default",
+  );
+
+  const customProductOptions = product.options.filter(
+    ({ name }) => name !== "default",
+  );
+
   const form = useForm<ProductSchema>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -74,24 +96,18 @@ export function UpdateProductForm({ collections, product }: Props) {
       name: product.name,
       slug: product.slug,
       description: String(product.description),
-      price: product.price ? formatter.currency(product.price) : "",
-      originalPrice: product.originalPrice
-        ? formatter.currency(product.originalPrice)
-        : "",
-      quantity: product.quantity ?? 0,
-      sku: product.sku ?? "",
-      variants: product.variants ?? [],
-      options: product.options
-        ? product.options.map((option) => ({
-            ...option,
-            price: option.price ? formatter.currency(option.price) : "",
-            originalPrice: option.originalPrice
-              ? formatter.currency(option.originalPrice)
-              : "",
-            quantity: option.quantity ?? 0,
-            sku: option.sku ?? "",
-          }))
-        : [],
+      price: defaultProductOption?.price,
+      originalPrice: defaultProductOption?.originalPrice,
+      quantity: defaultProductOption?.quantity ?? 0,
+      sku: defaultProductOption?.sku ?? "",
+      variants: customProductVariants,
+      options: customProductOptions.map((option) => ({
+        ...option,
+        price: formatter.currency(option?.price ?? 0),
+        originalPrice: formatter.currency(option.originalPrice ?? 0),
+        quantity: option.quantity ?? 0,
+        sku: option.sku ?? "",
+      })),
     },
   });
 
@@ -103,7 +119,7 @@ export function UpdateProductForm({ collections, product }: Props) {
   const watched = useWatch({
     control: form.control,
     name: "variants",
-    defaultValue: product.variants,
+    defaultValue: product.variants.filter(({ name }) => name !== "default"),
   });
 
   useEffect(() => {
@@ -115,27 +131,25 @@ export function UpdateProductForm({ collections, product }: Props) {
       },
     );
 
-    if (options.every(Boolean)) {
-      form.setValue(
-        `options`,
-        options.filter(Boolean).map((option) => {
-          const result = product.options.find(({ name }) => {
-            return option.includes(name);
-          });
+    form.setValue(
+      `options`,
+      options.filter(Boolean).map((option) => {
+        const result = product.options.find(({ name }) => {
+          return option.includes(name.trim());
+        });
 
-          return {
-            id: result?.id ?? undefined,
-            name: option,
-            price: result?.price ? formatter.currency(result.price) : "",
-            originalPrice: result?.originalPrice
-              ? formatter.currency(result.originalPrice)
-              : "",
-            quantity: result?.quantity ?? 0,
-            sku: result?.sku ?? "",
-          };
-        }),
-      );
-    }
+        return {
+          id: result?.id ?? undefined,
+          name: option,
+          price: result?.price ? formatter.currency(result.price) : "",
+          originalPrice: result?.originalPrice
+            ? formatter.currency(result.originalPrice)
+            : "",
+          quantity: result?.quantity ?? 0,
+          sku: result?.sku ?? "",
+        };
+      }),
+    );
   }, [watched, form, product.options]);
 
   const selectedCollections = product.collections.map((collection) => ({
@@ -152,7 +166,19 @@ export function UpdateProductForm({ collections, product }: Props) {
   const { mutate, isLoading } = useServerAction(updateProductAction);
 
   const onSubmit = () => {
-    mutate(form.getValues(), {
+    const values = form.getValues();
+
+    const mergedValues = {
+      ...values,
+      variants: defaultProductVariants
+        ? [defaultProductVariants, ...values.variants]
+        : values.variants,
+      options: defaultProductOption
+        ? [defaultProductOption, ...values.options]
+        : values.options,
+    };
+
+    mutate(mergedValues, {
       async onSuccess(data) {
         if (selectedFiles.length > 0) {
           await startUpload(selectedFiles, { product: String(data?.id) });
