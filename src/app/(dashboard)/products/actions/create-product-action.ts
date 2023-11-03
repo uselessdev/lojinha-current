@@ -44,7 +44,7 @@ export const createProductAction = createServerAction({
             },
           });
 
-          await tx.productOptions.create({
+          await tx.productOption.create({
             data: {
               name: "default",
               store: ctx.store,
@@ -69,7 +69,7 @@ export const createProductAction = createServerAction({
         }
 
         if (options && options.length > 0) {
-          await tx.productOptions.createMany({
+          await tx.productOption.createMany({
             data: options.map((option) => ({
               name: option.name,
               productId: product.id,

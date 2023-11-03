@@ -60,7 +60,7 @@ export const updateProductAction = createServerAction({
           /**
            * Delete all options that are removed and not present in payload.options
            */
-          await tx.productOptions.deleteMany({
+          await tx.productOption.deleteMany({
             where: {
               store: ctx.store,
               name: {
@@ -83,7 +83,7 @@ export const updateProductAction = createServerAction({
           });
 
           optionsToUpdate.map(async (option) => {
-            await tx.productOptions.update({
+            await tx.productOption.update({
               where: { id: option.id },
               data: {
                 ...option,
@@ -118,7 +118,7 @@ export const updateProductAction = createServerAction({
 
           if (optionsToCreate.length) {
             if (defaultOptions) {
-              await tx.productOptions.delete({
+              await tx.productOption.delete({
                 where: {
                   id: defaultOptions?.id,
                   productId: id,
@@ -127,7 +127,7 @@ export const updateProductAction = createServerAction({
               });
             }
 
-            await tx.productOptions.createMany({
+            await tx.productOption.createMany({
               data: optionsToCreate.map((option) => ({
                 ...option,
                 productId: id as string,
@@ -158,7 +158,7 @@ export const updateProductAction = createServerAction({
               },
             });
 
-            await tx.productOptions.update({
+            await tx.productOption.update({
               where: {
                 productId: id,
                 id: defaultOptions.id,
@@ -191,7 +191,7 @@ export const updateProductAction = createServerAction({
               },
             });
 
-            await tx.productOptions.create({
+            await tx.productOption.create({
               data: {
                 name: "default",
                 store: ctx.store,

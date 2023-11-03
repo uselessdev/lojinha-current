@@ -10,7 +10,7 @@ import {
   type Collection,
   type Image,
   type ProductVariants,
-  type ProductOptions,
+  type ProductOption,
 } from "@prisma/client";
 import { useUploadThing } from "~/lib/uploadthing";
 import { updateProductAction } from "../actions/update-product-action";
@@ -57,7 +57,7 @@ type Props = {
     collections: Collection[];
     images: Image[];
     variants: ProductVariants[];
-    options: ProductOptions[];
+    options: ProductOption[];
   };
 };
 
