@@ -1,4 +1,3 @@
-import "@total-typescript/ts-reset";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ApiCors } from "~/lib/api/cors";
@@ -35,42 +34,37 @@ export async function POST(request: Request) {
   try {
     const cart = await db.$transaction(
       async (tx) => {
-        const foundedProducts = data.products.map(async (product) => {
-          const p = await tx.product.findFirst({
+        const requested = data.products.map(async ({ id, quantity }) => {
+          const product = await tx.productOption.findFirst({
             where: {
+              id,
               store,
-              status: "ACTIVE",
-              deletedAt: null,
-              id: product.id,
-              quantity: {
-                gte: product.quantity,
+              quantity: { gte: quantity },
+              product: {
+                status: "ACTIVE",
+                deletedAt: null,
               },
-            },
-            select: {
-              id: true,
-              quantity: true,
-              price: true,
             },
           });
 
-          if (!p) {
+          if (!product) {
             return null;
           }
 
           return {
-            ...p,
-            quantity: product.quantity,
-            price: product.quantity * (p?.price ?? 0),
+            ...product,
+            quantity,
+            price: quantity * Number(product.price ?? 0),
           };
         });
 
-        const products = (await Promise.all(foundedProducts)).filter(Boolean);
+        const products = (await Promise.all(requested)).filter(Boolean);
 
         if (!products.length) {
           throw new RaiseApiError({
             code: "INSUFFICIENT_PRODUCTS",
-            error: `The requested quantity is not available`,
             status: 422,
+            error: `The requested quantity is no available.`,
           });
         }
 
@@ -83,13 +77,13 @@ export async function POST(request: Request) {
         }, 0);
 
         products.map(async (product) => {
-          await tx.product.update({
+          await tx.productOption.update({
             where: {
               id: product.id,
             },
             data: {
               quantity: {
-                decrement: product.quantity ?? 0,
+                decrement: product.quantity,
               },
               updatedAt: new Date(),
             },
@@ -103,8 +97,10 @@ export async function POST(request: Request) {
             products: {
               createMany: {
                 data: products.map((product) => ({
-                  productId: product.id,
-                  quantity: Number(product.quantity),
+                  optionId: product.id,
+                  price: product.price,
+                  productId: product.productId,
+                  quantity: product.quantity,
                 })),
               },
             },
@@ -112,13 +108,15 @@ export async function POST(request: Request) {
           include: {
             products: {
               select: {
+                price: true,
+                quantity: true,
+                option: true,
                 product: {
                   include: {
                     collections: true,
                     images: true,
                   },
                 },
-                quantity: true,
               },
             },
           },

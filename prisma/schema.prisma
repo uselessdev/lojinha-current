@@ -89,7 +89,7 @@ model Product {
   orders      OrderProduct[]
   images      Image[]
   variants    ProductVariants[]
-  options     ProductOptions[]
+  options     ProductOption[]
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
@@ -114,7 +114,7 @@ model ProductVariants {
   @@map("product_variants")
 }
 
-model ProductOptions {
+model ProductOption {
   id            String  @id @default(uuid())
   productId     String  @map("product_id")
   store         String
@@ -124,7 +124,8 @@ model ProductOptions {
   quantity      Int?
   sku           String?
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order   OrderProduct[]
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
@@ -166,15 +167,17 @@ model Order {
 }
 
 model OrderProduct {
-  productId String  @map("product_id")
-  optionId  String? @map("option_id")
-  orderId   String  @map("order_id")
+  productId String @map("product_id")
+  optionId  String @map("option_id")
+  orderId   String @map("order_id")
   quantity  Int
+  price     Int
 
-  product Product @relation(fields: [productId], references: [id])
-  order   Order   @relation(fields: [orderId], references: [id])
+  option  ProductOption @relation(fields: [optionId], references: [id])
+  product Product       @relation(fields: [productId], references: [id])
+  order   Order         @relation(fields: [orderId], references: [id])
 
-  @@id([productId, orderId])
+  @@id([productId, orderId, optionId])
   @@map("order_product")
 }
 

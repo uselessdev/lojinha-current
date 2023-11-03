@@ -21,18 +21,19 @@ export async function GET(
       store,
       id: params.id,
       status: "PENDING",
-      deletedAt: null,
     },
     include: {
       products: {
         select: {
+          price: true,
+          quantity: true,
+          option: true,
           product: {
             include: {
               collections: true,
               images: true,
             },
           },
-          quantity: true,
         },
       },
     },
@@ -46,5 +47,7 @@ export async function GET(
     });
   }
 
-  return NextResponse.json({ cart: transformOrderResponse(cart) });
+  return NextResponse.json({
+    cart: transformOrderResponse(cart),
+  });
 }

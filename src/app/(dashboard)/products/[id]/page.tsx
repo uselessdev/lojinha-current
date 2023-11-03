@@ -30,6 +30,9 @@ export default async function ProductPage({ params }: Props) {
       variants: true,
       options: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   if (!product) {

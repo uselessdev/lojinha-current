@@ -25,21 +25,21 @@ export async function DELETE(
   try {
     const cart = await db.$transaction(
       async (tx) => {
-        const cartExists = await tx.order.findFirst({
+        const exists = await tx.order.findFirst({
           where: {
+            store,
             id: params.id,
             status: "PENDING",
-            store,
             deletedAt: null,
             products: {
               some: {
-                productId: params.pid,
+                optionId: params.pid,
               },
             },
           },
         });
 
-        if (!cartExists) {
+        if (!exists) {
           throw new RaiseApiError({
             code: "NOT_FOUND",
             error: `Cart or product not found`,
@@ -47,11 +47,18 @@ export async function DELETE(
           });
         }
 
+        const option = await tx.productOption.findFirst({
+          where: {
+            id: params.pid,
+          },
+        });
+
         const product = await tx.orderProduct.delete({
           where: {
-            productId_orderId: {
+            productId_orderId_optionId: {
               orderId: params.id,
-              productId: params.pid,
+              optionId: params.pid,
+              productId: option?.productId as string,
             },
           },
           select: {
@@ -59,7 +66,7 @@ export async function DELETE(
           },
         });
 
-        await tx.product.update({
+        await tx.productOption.update({
           where: {
             id: params.pid,
           },
@@ -71,55 +78,33 @@ export async function DELETE(
           },
         });
 
-        const cartProducts = await tx.order.findFirst({
+        const products = await tx.orderProduct.findMany({
           where: {
-            id: params.id,
+            orderId: params.id,
           },
           select: {
-            products: {
-              select: {
-                quantity: true,
-                product: true,
-              },
-            },
+            quantity: true,
+            price: true,
           },
         });
 
-        if (!cartProducts?.products.length) {
-          await tx.order.update({
+        if (products.length <= 0) {
+          await tx.order.delete({
             where: {
               id: params.id,
-            },
-            data: {
-              deletedAt: new Date(),
-            },
-          });
-
-          await tx.event.create({
-            data: {
-              action: "ARCHIVE_ORDER",
-              payload: { id: params.id, product: params.pid },
-              user: `client-store:${store}`,
-              store,
             },
           });
 
           return null;
         }
 
-        const price = cartProducts?.products.reduce(
-          (value, { product, quantity }) => {
-            if (product.price) {
-              return (value += product.price * quantity);
-            }
-
-            return value;
-          },
-          0,
-        );
+        const price = products.reduce((value, product) => {
+          return (value += product.price);
+        }, 0);
 
         const cart = await tx.order.update({
           where: {
+            store,
             id: params.id,
           },
           data: {
@@ -129,8 +114,15 @@ export async function DELETE(
           include: {
             products: {
               select: {
+                price: true,
                 quantity: true,
-                product: true,
+                option: true,
+                product: {
+                  include: {
+                    collections: true,
+                    images: true,
+                  },
+                },
               },
             },
           },
@@ -193,7 +185,7 @@ export async function PATCH(
             store,
             products: {
               some: {
-                productId: params.pid,
+                optionId: params.pid,
               },
             },
           },
@@ -207,8 +199,9 @@ export async function PATCH(
           });
         }
 
-        const product = await tx.product.findFirst({
+        const productOption = await tx.productOption.findFirst({
           where: {
+            store,
             id: params.pid,
           },
           select: {
@@ -218,7 +211,7 @@ export async function PATCH(
           },
         });
 
-        if (!product) {
+        if (!productOption) {
           throw new RaiseApiError({
             code: "NOT_FOUND",
             error: `Can't find the product`,
@@ -226,23 +219,24 @@ export async function PATCH(
           });
         }
 
-        const productInCart = await tx.orderProduct.findFirst({
+        const optionProductInCart = await tx.orderProduct.findFirst({
           where: {
             orderId: params.id,
-            productId: params.pid,
+            optionId: params.pid,
           },
           select: {
+            productId: true,
             quantity: true,
           },
         });
 
-        if (data.quantity === Number(productInCart?.quantity)) {
+        if (data.quantity === Number(optionProductInCart?.quantity)) {
           return "UNCHANGED";
         }
 
-        const delta = data.quantity - Number(productInCart?.quantity);
+        const delta = data.quantity - Number(optionProductInCart?.quantity);
 
-        if (delta > Number(product.quantity)) {
+        if (delta > Number(productOption.quantity)) {
           throw new RaiseApiError({
             code: "INSUFFICIENT_PRODUCTS",
             error: `The requested quantity is unavailable`,
@@ -253,9 +247,10 @@ export async function PATCH(
         if (data.quantity <= 0) {
           await tx.orderProduct.delete({
             where: {
-              productId_orderId: {
+              productId_orderId_optionId: {
+                optionId: params.pid,
                 orderId: params.id,
-                productId: params.pid,
+                productId: optionProductInCart?.productId as string,
               },
             },
           });
@@ -264,12 +259,16 @@ export async function PATCH(
         if (data.quantity > 0) {
           await tx.orderProduct.update({
             where: {
-              productId_orderId: {
+              productId_orderId_optionId: {
                 orderId: params.id,
-                productId: params.pid,
+                optionId: params.pid,
+                productId: optionProductInCart?.productId as string,
               },
             },
             data: {
+              price: {
+                set: data.quantity * Number(productOption.price ?? 0),
+              },
               quantity: {
                 set: data.quantity,
               },
@@ -277,8 +276,9 @@ export async function PATCH(
           });
         }
 
-        await tx.product.update({
+        await tx.productOption.update({
           where: {
+            store,
             id: params.pid,
           },
           data: {
@@ -289,46 +289,33 @@ export async function PATCH(
           },
         });
 
-        const productsInCart = await tx.order.findFirst({
+        const products = await tx.orderProduct.findMany({
           where: {
-            id: params.id,
+            orderId: params.id,
           },
-          include: {
-            products: {
-              select: {
-                product: true,
-                quantity: true,
-              },
-            },
+          select: {
+            optionId: true,
+            price: true,
           },
         });
 
-        if (productsInCart?.products && productsInCart.products.length <= 0) {
-          await tx.order.update({
+        if (products.length <= 0) {
+          await tx.order.delete({
             where: {
               id: params.id,
             },
-            data: {
-              deletedAt: new Date(),
-            },
           });
 
-          return "CART_REMOVED";
+          return `REMOVED`;
         }
 
-        const price = productsInCart?.products.reduce(
-          (value, { product, quantity }) => {
-            if (product.price) {
-              return (value += product.price * quantity);
-            }
-
-            return value;
-          },
-          0,
-        );
+        const price = products.reduce((value, { price }) => {
+          return (value += price);
+        }, 0);
 
         const cart = await tx.order.update({
           where: {
+            store,
             id: params.id,
           },
           data: {
@@ -338,8 +325,15 @@ export async function PATCH(
           include: {
             products: {
               select: {
-                product: true,
+                price: true,
                 quantity: true,
+                option: true,
+                product: {
+                  include: {
+                    collections: true,
+                    images: true,
+                  },
+                },
               },
             },
           },
@@ -362,7 +356,7 @@ export async function PATCH(
       },
     );
 
-    if (cart === "CART_REMOVED") {
+    if (cart === "REMOVED") {
       return new Response(null, {
         status: 204,
       });
@@ -374,7 +368,9 @@ export async function PATCH(
       });
     }
 
-    return NextResponse.json({ cart: transformOrderResponse(cart) });
+    return NextResponse.json({
+      cart: transformOrderResponse(cart),
+    });
   } catch (error) {
     return ApiError(error as RaiseApiError);
   }
