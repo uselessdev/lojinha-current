@@ -51,6 +51,7 @@ export const updateProductAction = createServerAction({
               name: {
                 not: "default",
               },
+              productId: id,
               id: {
                 notIn: variantsIds as string[],
               },
@@ -63,6 +64,7 @@ export const updateProductAction = createServerAction({
           await tx.productOption.deleteMany({
             where: {
               store: ctx.store,
+              productId: id,
               name: {
                 not: "default",
               },

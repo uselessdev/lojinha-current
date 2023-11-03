@@ -173,7 +173,7 @@ model OrderProduct {
   quantity  Int
   price     Int
 
-  option  ProductOption @relation(fields: [optionId], references: [id])
+  option  ProductOption @relation(fields: [optionId], references: [id], onDelete: SetDefault)
   product Product       @relation(fields: [productId], references: [id])
   order   Order         @relation(fields: [orderId], references: [id])
 

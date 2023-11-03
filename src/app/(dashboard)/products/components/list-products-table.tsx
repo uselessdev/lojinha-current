@@ -11,6 +11,7 @@ import NextImage from "next/image";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
+  HelpCircleIcon,
   MoreHorizontal,
   PenIcon,
   Trash2Icon,
@@ -45,16 +46,30 @@ import {
   AlertDialogTitle,
   AlertDialogCancel,
 } from "~/components/ui/alert-dialog";
-import { type Collection, type Image, type Product } from "@prisma/client";
+import {
+  type ProductOption,
+  type Collection,
+  type Image,
+  type Product,
+  type ProductVariants,
+} from "@prisma/client";
 import { archiveProductAction } from "../actions/archive-product-action";
 import { restoreProductAction } from "../actions/restore-product-action";
 import { destroyProductAction } from "../actions/destroy-product-action";
 import { useDisclosure } from "~/lib/hooks/use-disclosure";
 import { useServerAction } from "~/lib/actions/use-action";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 type ProductWithCollection = Product & {
   collections: Collection[];
   images: Image[];
+  options: ProductOption[];
+  variants: ProductVariants[];
 };
 
 type Props = {
@@ -128,28 +143,79 @@ export function ListProductsTable({ products }: Props) {
         );
       },
     }),
-    column.accessor("price", {
+    column.accessor("options", {
+      header: "Opções",
+      cell(props) {
+        const options = props.getValue();
+
+        return (
+          <Badge className="text-xs" variant="secondary">
+            {options.length}
+          </Badge>
+        );
+      },
+    }),
+    column.accessor("variants", {
+      header: "Variações",
+      cell(props) {
+        const variants = props.getValue();
+
+        return (
+          <Badge className="text-xs" variant="secondary">
+            {variants.length}
+          </Badge>
+        );
+      },
+    }),
+    column.accessor("options", {
       header: "Preço (R$)",
       cell(props) {
-        const price = props.getValue();
+        const options = props.getValue();
+        const prices = options.map(({ price }) => price).sort();
 
-        if (price) {
-          return formatter.currency(price);
+        if (prices.length) {
+          return (
+            <div className="flex flex-wrap gap-2">
+              A partir de{" "}
+              <strong>{formatter.currency(Number(prices.at(0) ?? 0))}</strong>
+            </div>
+          );
         }
       },
     }),
-    column.accessor("originalPrice", {
-      header: "Preço Original (R$)",
+    column.accessor("options", {
+      header: () => {
+        return (
+          <div className="flex items-center gap-2">
+            <p>Quantidade</p>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircleIcon className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent asChild>
+                  <p className="h-min w-full max-w-[200px] text-xs normal-case text-foreground/50">
+                    A quantidade exibida é a soma da quantidade em todas as
+                    opções de um produto.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        );
+      },
       cell(props) {
-        const price = props.getValue();
+        const options = props.getValue();
 
-        if (price) {
-          return formatter.currency(price);
-        }
+        return (
+          <Badge variant="secondary">
+            {options.reduce((value, option) => {
+              return (value += option.quantity ?? 0);
+            }, 0)}
+          </Badge>
+        );
       },
-    }),
-    column.accessor("quantity", {
-      header: "Quantidade",
     }),
     column.accessor(({ id, deletedAt }) => ({ id, deletedAt }), {
       id: "action",

@@ -1,6 +1,12 @@
 "use client";
 
-import { type Customer, type Order, type Product } from "@prisma/client";
+import {
+  type ProductOption,
+  type Customer,
+  type Order,
+  type Product,
+  type ProductVariants,
+} from "@prisma/client";
 import {
   createColumnHelper,
   flexRender,
@@ -20,8 +26,13 @@ import {
 import { formatter } from "~/lib/utils";
 
 type CartWithProductAndCustomer = Order & {
-  products: (Product & { order: { quantity: number; price: number } })[];
   customer: Customer | null;
+  products: Array<{
+    price: number;
+    quantity: number;
+    product: Product & { variants: ProductVariants[] };
+    option: ProductOption;
+  }>;
 };
 
 type Props = {
@@ -49,18 +60,36 @@ export function ListCarts({ carts }: Props) {
 
         return (
           <div className="flex flex-wrap gap-2">
-            {products.map((product) => (
-              <Link
-                key={product.id}
-                href={`/products/${product.id}`}
-                className="flex items-baseline gap-1 rounded-md bg-zinc-50 p-2 font-medium"
-              >
-                <small className="text-zinc-400">
-                  {product.order.quantity}x
-                </small>{" "}
-                {product.name}
-              </Link>
-            ))}
+            {products.map(({ option, product, quantity }) => {
+              const variants = product.variants.filter(({ values }) =>
+                values.some((value) => option.name.includes(value)),
+              );
+
+              const selected = variants.map((variant) => ({
+                name: variant.name,
+                value: variant.values.find((value) =>
+                  option.name.includes(value),
+                ),
+              }));
+
+              return (
+                <Badge key={product.id}>
+                  <Link href={`/products/${product.id}`}>
+                    <small className="text-zinc-400">{quantity}x</small>{" "}
+                    {product.name}
+                    {option.name !== "default" ? (
+                      <span className="pl-1 text-xs font-normal">
+                        (
+                        {selected
+                          .map((e) => `${e.name}: ${e.value}`)
+                          .join(" | ")}
+                        )
+                      </span>
+                    ) : null}
+                  </Link>
+                </Badge>
+              );
+            })}
           </div>
         );
       },

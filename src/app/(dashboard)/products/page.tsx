@@ -18,10 +18,15 @@ export default async function ProductsPage() {
     where: {
       store: String(orgId),
     },
+    orderBy: {
+      createdAt: "desc",
+    },
     include: {
       collections: true,
       orders: true,
       images: true,
+      options: true,
+      variants: true,
     },
   });
 
