@@ -42,6 +42,7 @@ import { toast } from "~/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { ProductVariantValues } from "./product-variant-values";
 import { cartesian } from "../utils";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 type Props = {
   collections: Collection[];
@@ -128,440 +129,442 @@ export function CreateProductForm({ collections }: Props) {
   }));
 
   return (
-    <Form {...form}>
-      <form className="space-y-4" action={onSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Novo Produto</CardTitle>
-          </CardHeader>
+    <ScrollArea className="h-[calc(100dvh-100px)]">
+      <Form {...form}>
+        <form className="space-y-4" action={onSubmit}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Novo Produto</CardTitle>
+            </CardHeader>
 
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={({ target }) => {
-                        form.setValue("name", target.value);
-                        form.setValue(
-                          "slug",
-                          slugify(String(target.value), {
-                            lower: true,
-                            trim: true,
-                          }),
-                        );
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="slug"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Slug</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Editor
-                      label="Descrição"
-                      {...field}
-                      onChange={({ html }) =>
-                        form.setValue("description", html)
-                      }
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="font-medium">Organização e Visibilidade</h3>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="collections"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Coleções</FormLabel>
-                  <FormControl>
-                    <Autocomplete
-                      options={options}
-                      {...field}
-                      onChange={({ target }) => {
-                        form.setValue(
-                          "collections",
-                          target.value.map(({ value }) => value),
-                        );
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um status para este produto" />
-                      </SelectTrigger>
-                    </FormControl>
-
-                    <SelectContent>
-                      <SelectItem value="ACTIVE">Ativo</SelectItem>
-                      <SelectItem value="DRAFT">Rascunho</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="font-medium">Imagens</h3>
-          </CardHeader>
-
-          <CardContent>
-            <FormField
-              control={form.control}
-              // @ts-expect-error name is not from schema
-              name="cover"
-              render={() => (
-                <FormItem>
-                  <FormControl>
-                    <InputUpload
-                      multiple
-                      files={selectedFiles}
-                      onRemoveFile={(file) => {
-                        const isString = typeof file === "string";
-
-                        if (!isString) {
-                          setSelectedFiles((files) =>
-                            files.filter((f) => f.name !== file.name),
+                      <Input
+                        {...field}
+                        onChange={({ target }) => {
+                          form.setValue("name", target.value);
+                          form.setValue(
+                            "slug",
+                            slugify(String(target.value), {
+                              lower: true,
+                              trim: true,
+                            }),
                           );
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Slug</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Editor
+                        label="Descrição"
+                        {...field}
+                        onChange={({ html }) =>
+                          form.setValue("description", html)
                         }
-                      }}
-                      onChange={(event) =>
-                        setSelectedFiles((selected) => [
-                          ...selected,
-                          ...event.target.files,
-                        ])
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="font-medium">Preço e Estoque</h3>
-          </CardHeader>
-
-          <CardContent className="flex w-full gap-4">
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Preço</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={({ target }) => {
-                        form.setValue(
-                          "price",
-                          formatter.currency(formatter.number(target.value)),
-                        );
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="originalPrice"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Preço Original</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={({ target }) => {
-                        form.setValue(
-                          "originalPrice",
-                          formatter.currency(formatter.number(target.value)),
-                        );
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="sku"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>SKU</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Quantidade</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={({ target }) =>
-                        form.setValue(
-                          "quantity",
-                          formatter.number(target.value),
-                        )
-                      }
-                      type="number"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="font-medium">Variantes</h3>
-          </CardHeader>
-
-          {variants.fields.length > 0 ? (
-            <div>
-              {variants.fields.map((variant, index) => (
-                <CardContent
-                  key={variant.id}
-                  className="space-y-6 border-b pt-6 first:pt-0 last:border-b-0"
-                >
-                  <FormField
-                    name={`variants.${index}.name`}
-                    render={({ field }) => (
-                      <FormItem className="flex gap-2 space-y-0">
-                        <FormControl>
-                          <Input {...field} placeholder="Nome" />
-                        </FormControl>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          type="button"
-                          onClick={() => variants.remove(index)}
-                        >
-                          <Trash2Icon />
-                          <span className="sr-only">Remover Variação</span>
-                        </Button>
-                      </FormItem>
-                    )}
-                  />
-
-                  <ProductVariantValues index={index} />
-                </CardContent>
-              ))}
-            </div>
-          ) : null}
-
-          <CardFooter className="border-t py-0">
-            <Button
-              type="button"
-              variant="link"
-              className="gap-2 px-0 hover:text-zinc-500 hover:no-underline"
-              onClick={() => variants.append({ name: "", values: [" "] })}
-            >
-              <PlusIcon /> Adicionar Variante
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="font-medium">Opções</h3>
-          </CardHeader>
-
-          {watched.length > 0 ? (
-            <CardContent className="space-y-3">
-              {cartesian(...watched.map(({ values }) => values)).map(
-                (option, index) => (
-                  <div key={option.join("-")} className="flex gap-2">
-                    <FormField
-                      name={`options.${index}.name`}
-                      render={({ field }) => {
-                        return (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Nome"
-                                defaultValue={option.join(`/`)}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        );
-                      }}
-                    />
-
-                    <FormField
-                      name={`options.${index}.price`}
-                      render={({ field }) => {
-                        return (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Preço"
-                                onChange={({ target }) => {
-                                  form.setValue(
-                                    `options.${index}.price`,
-                                    formatter.currency(
-                                      formatter.number(target.value),
-                                    ),
-                                  );
-                                }}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        );
-                      }}
-                    />
-
-                    <FormField
-                      name={`options.${index}.originalPrice`}
-                      render={({ field }) => {
-                        return (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Preço Original"
-                                onChange={({ target }) => {
-                                  form.setValue(
-                                    `options.${index}.originalPrice`,
-                                    formatter.currency(
-                                      formatter.number(target.value),
-                                    ),
-                                  );
-                                }}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        );
-                      }}
-                    />
-
-                    <FormField
-                      name={`options.${index}.quantity`}
-                      render={({ field }) => {
-                        return (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Quantidade"
-                                onChange={({ target }) =>
-                                  form.setValue(
-                                    `options.${index}.quantity`,
-                                    formatter.number(target.value),
-                                  )
-                                }
-                                type="number"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        );
-                      }}
-                    />
-
-                    <FormField
-                      name={`options.${index}.sku`}
-                      render={({ field }) => {
-                        return (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input {...field} placeholder="SKU" />
-                            </FormControl>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  </div>
-                ),
-              )}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </CardContent>
-          ) : (
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h3 className="font-medium">Organização e Visibilidade</h3>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="collections"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Coleções</FormLabel>
+                    <FormControl>
+                      <Autocomplete
+                        options={options}
+                        {...field}
+                        onChange={({ target }) => {
+                          form.setValue(
+                            "collections",
+                            target.value.map(({ value }) => value),
+                          );
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um status para este produto" />
+                        </SelectTrigger>
+                      </FormControl>
+
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Ativo</SelectItem>
+                        <SelectItem value="DRAFT">Rascunho</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h3 className="font-medium">Imagens</h3>
+            </CardHeader>
+
             <CardContent>
-              <p className="text-sm text-foreground">
-                Produto sem nenhuma variação.
-              </p>
-            </CardContent>
-          )}
-        </Card>
+              <FormField
+                control={form.control}
+                // @ts-expect-error name is not from schema
+                name="cover"
+                render={() => (
+                  <FormItem>
+                    <FormControl>
+                      <InputUpload
+                        multiple
+                        files={selectedFiles}
+                        onRemoveFile={(file) => {
+                          const isString = typeof file === "string";
 
-        <Button
-          className="sticky bottom-4 w-full"
-          type="submit"
-          aria-disabled={isLoading || isUploading || !form.formState.isValid}
-        >
-          {isLoading || isUploading ? "Criando..." : "Criar Produto"}
-        </Button>
-      </form>
-    </Form>
+                          if (!isString) {
+                            setSelectedFiles((files) =>
+                              files.filter((f) => f.name !== file.name),
+                            );
+                          }
+                        }}
+                        onChange={(event) =>
+                          setSelectedFiles((selected) => [
+                            ...selected,
+                            ...event.target.files,
+                          ])
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h3 className="font-medium">Preço e Estoque</h3>
+            </CardHeader>
+
+            <CardContent className="flex w-full gap-4">
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Preço</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={({ target }) => {
+                          form.setValue(
+                            "price",
+                            formatter.currency(formatter.number(target.value)),
+                          );
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="originalPrice"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Preço Original</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={({ target }) => {
+                          form.setValue(
+                            "originalPrice",
+                            formatter.currency(formatter.number(target.value)),
+                          );
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="sku"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>SKU</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Quantidade</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={({ target }) =>
+                          form.setValue(
+                            "quantity",
+                            formatter.number(target.value),
+                          )
+                        }
+                        type="number"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h3 className="font-medium">Variantes</h3>
+            </CardHeader>
+
+            {variants.fields.length > 0 ? (
+              <div>
+                {variants.fields.map((variant, index) => (
+                  <CardContent
+                    key={variant.id}
+                    className="space-y-6 border-b pt-6 first:pt-0 last:border-b-0"
+                  >
+                    <FormField
+                      name={`variants.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem className="flex gap-2 space-y-0">
+                          <FormControl>
+                            <Input {...field} placeholder="Nome" />
+                          </FormControl>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            type="button"
+                            onClick={() => variants.remove(index)}
+                          >
+                            <Trash2Icon />
+                            <span className="sr-only">Remover Variação</span>
+                          </Button>
+                        </FormItem>
+                      )}
+                    />
+
+                    <ProductVariantValues index={index} />
+                  </CardContent>
+                ))}
+              </div>
+            ) : null}
+
+            <CardFooter className="border-t py-0">
+              <Button
+                type="button"
+                variant="link"
+                className="gap-2 px-0 hover:text-zinc-500 hover:no-underline"
+                onClick={() => variants.append({ name: "", values: [" "] })}
+              >
+                <PlusIcon /> Adicionar Variante
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h3 className="font-medium">Opções</h3>
+            </CardHeader>
+
+            {watched.length > 0 ? (
+              <CardContent className="space-y-3">
+                {cartesian(...watched.map(({ values }) => values)).map(
+                  (option, index) => (
+                    <div key={option.join("-")} className="flex gap-2">
+                      <FormField
+                        name={`options.${index}.name`}
+                        render={({ field }) => {
+                          return (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Nome"
+                                  defaultValue={option.join(`/`)}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          );
+                        }}
+                      />
+
+                      <FormField
+                        name={`options.${index}.price`}
+                        render={({ field }) => {
+                          return (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Preço"
+                                  onChange={({ target }) => {
+                                    form.setValue(
+                                      `options.${index}.price`,
+                                      formatter.currency(
+                                        formatter.number(target.value),
+                                      ),
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          );
+                        }}
+                      />
+
+                      <FormField
+                        name={`options.${index}.originalPrice`}
+                        render={({ field }) => {
+                          return (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Preço Original"
+                                  onChange={({ target }) => {
+                                    form.setValue(
+                                      `options.${index}.originalPrice`,
+                                      formatter.currency(
+                                        formatter.number(target.value),
+                                      ),
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          );
+                        }}
+                      />
+
+                      <FormField
+                        name={`options.${index}.quantity`}
+                        render={({ field }) => {
+                          return (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Quantidade"
+                                  onChange={({ target }) =>
+                                    form.setValue(
+                                      `options.${index}.quantity`,
+                                      formatter.number(target.value),
+                                    )
+                                  }
+                                  type="number"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          );
+                        }}
+                      />
+
+                      <FormField
+                        name={`options.${index}.sku`}
+                        render={({ field }) => {
+                          return (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input {...field} placeholder="SKU" />
+                              </FormControl>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    </div>
+                  ),
+                )}
+              </CardContent>
+            ) : (
+              <CardContent>
+                <p className="text-sm text-foreground">
+                  Produto sem nenhuma variação.
+                </p>
+              </CardContent>
+            )}
+          </Card>
+
+          <Button
+            className="sticky bottom-0 w-full"
+            type="submit"
+            aria-disabled={isLoading || isUploading || !form.formState.isValid}
+          >
+            {isLoading || isUploading ? "Criando..." : "Criar Produto"}
+          </Button>
+        </form>
+      </Form>
+    </ScrollArea>
   );
 }

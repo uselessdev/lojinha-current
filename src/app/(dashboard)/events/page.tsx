@@ -7,6 +7,7 @@ import {
 } from "~/components/ui/card";
 import { db } from "~/lib/database";
 import { EventsListTable } from "./components/events-list-table";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 export default async function EventsPage() {
   const { orgId, userId } = auth();
@@ -33,7 +34,11 @@ export default async function EventsPage() {
         </CardDescription>
       </CardHeader>
 
-      {events.length > 0 ? <EventsListTable events={events} /> : null}
+      {events.length > 0 ? (
+        <ScrollArea className="h-[calc(100dvh-228px)]">
+          <EventsListTable events={events} />
+        </ScrollArea>
+      ) : null}
     </Card>
   );
 }
