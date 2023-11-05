@@ -64,7 +64,7 @@ export async function POST(request: Request) {
           throw new RaiseApiError({
             code: "INSUFFICIENT_PRODUCTS",
             status: 422,
-            error: `The requested quantity is no available.`,
+            error: `The requested quantity is not available.`,
           });
         }
 
