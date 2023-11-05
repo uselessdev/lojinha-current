@@ -8,6 +8,7 @@ type Params = {
   };
 };
 
+/** @todo use omit to remove store */
 function omit<T extends Record<string, unknown>, K extends keyof T>(
   keys: K[],
   model: T,

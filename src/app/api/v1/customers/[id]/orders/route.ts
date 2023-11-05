@@ -89,15 +89,6 @@ const createOrderSchema = z.object({
 
 const orderSchema = z.union([updateOrderSchema, createOrderSchema]);
 
-// function getOrderStatus(status: OrderStatus) {
-//   switch (status) {
-//     case "CREATED":
-//       return `Aguardando Pagamento.`;
-//     default:
-//       break;
-//   }
-// }
-
 export async function POST(request: Request, { params }: Params) {
   const store = String(request.headers.get("X-Store-ID"));
   const payload = orderSchema.safeParse(await request.json());
@@ -250,6 +241,7 @@ export async function POST(request: Request, { params }: Params) {
       });
     }
 
+    // @TODO create queue for send emails to customer and to store.
     if (order) {
       await db.event.create({
         data: {
