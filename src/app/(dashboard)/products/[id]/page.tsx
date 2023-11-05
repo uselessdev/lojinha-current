@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
 import { UpdateProductForm } from "../components/update-product-form";
 import { auth } from "@clerk/nextjs";
 import { db } from "~/lib/database";
@@ -34,6 +27,11 @@ export default async function ProductPage({ params }: Props) {
     include: {
       collections: true,
       images: true,
+      variants: true,
+      options: true,
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 
@@ -41,16 +39,5 @@ export default async function ProductPage({ params }: Props) {
     return notFound();
   }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{product.name}</CardTitle>
-        <CardDescription>#{product.id}</CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <UpdateProductForm product={product} collections={collections} />
-      </CardContent>
-    </Card>
-  );
+  return <UpdateProductForm product={product} collections={collections} />;
 }

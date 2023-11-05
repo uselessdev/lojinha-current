@@ -17,8 +17,16 @@ export default async function CartsPage() {
     include: {
       products: {
         select: {
-          product: true,
+          price: true,
           quantity: true,
+          option: true,
+          product: {
+            include: {
+              collections: true,
+              images: true,
+              variants: true,
+            },
+          },
         },
       },
       customer: true,
@@ -37,17 +45,7 @@ export default async function CartsPage() {
         </CardContent>
       ) : null}
 
-      {carts.length > 0 ? (
-        <ListCarts
-          carts={carts.map(({ products, ...cart }) => ({
-            ...cart,
-            products: products.map(({ product, quantity }) => ({
-              ...product,
-              order: { quantity, price: Number(product.price ?? 0) * quantity },
-            })),
-          }))}
-        />
-      ) : null}
+      {carts.length > 0 ? <ListCarts carts={carts} /> : null}
     </Card>
   );
 }

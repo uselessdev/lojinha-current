@@ -32,9 +32,11 @@ export async function POST(
   }
 
   try {
+    const { data } = payload;
+
     const cart = await db.$transaction(
       async (tx) => {
-        const cartExists = await tx.order.findFirst({
+        const exists = await tx.order.findFirst({
           where: {
             store,
             id: params.id,
@@ -43,116 +45,102 @@ export async function POST(
           },
         });
 
-        if (!cartExists) {
+        if (!exists) {
           throw new RaiseApiError({
             code: "NOT_FOUND",
-            error: `Can't find any cart with id ${params.id}`,
+            error: `Can't find any cart with the id ${params.id}`,
             status: 404,
           });
         }
 
-        const result = await tx.product.findFirst({
+        const result = await tx.productOption.findFirst({
           where: {
             store,
-            status: "ACTIVE",
-            deletedAt: null,
-            id: payload.data.id,
+            id: data.id,
             quantity: {
-              gte: payload.data.quantity,
+              gte: data.quantity,
+            },
+            product: {
+              status: "ACTIVE",
+              deletedAt: null,
             },
           },
           select: {
             id: true,
             price: true,
+            productId: true,
           },
         });
 
         if (!result) {
           throw new RaiseApiError({
             code: "INSUFFICIENT_PRODUCTS",
-            error: `The requested quantity is not available`,
+            error: `The requested quantity is not available.`,
             status: 422,
           });
         }
 
         const product = {
           ...result,
-          quantity: payload.data.quantity,
-          price: payload.data.quantity * (result.price ?? 0),
+          quantity: data.quantity,
+          price: data.quantity * Number(result.price ?? 0),
         };
 
-        const productInCart = await tx.orderProduct.findFirst({
+        await tx.productOption.update({
           where: {
-            orderId: params.id,
-            productId: product.id,
-          },
-          select: {
-            productId: true,
-            quantity: true,
-          },
-        });
-
-        if (productInCart) {
-          await tx.orderProduct.update({
-            where: {
-              productId_orderId: {
-                orderId: params.id,
-                productId: product.id,
-              },
-            },
-            data: {
-              quantity: productInCart.quantity + product.quantity,
-            },
-          });
-        }
-
-        if (!productInCart) {
-          await tx.orderProduct.create({
-            data: {
-              orderId: params.id,
-              productId: product.id,
-              quantity: product.quantity,
-            },
-          });
-        }
-
-        await tx.product.update({
-          where: {
-            id: product.id,
+            store,
+            id: data.id,
           },
           data: {
             quantity: {
-              decrement: product.quantity,
+              decrement: data.quantity,
             },
             updatedAt: new Date(),
           },
         });
 
-        const productsInCart = await tx.orderProduct.findMany({
-          where: {
+        await tx.orderProduct.upsert({
+          create: {
+            optionId: data.id,
+            price: product.price,
+            quantity: product.quantity,
             orderId: params.id,
+            productId: product.productId,
           },
-          select: {
-            quantity: true,
-            product: {
-              select: {
-                id: true,
-                price: true,
-              },
+          update: {
+            price: {
+              increment: product.price,
+            },
+            quantity: {
+              increment: product.quantity,
+            },
+          },
+          where: {
+            productId_orderId_optionId: {
+              optionId: product.id,
+              orderId: params.id,
+              productId: product.productId,
             },
           },
         });
 
-        const price = productsInCart.reduce((value, { quantity, product }) => {
-          if (product.price) {
-            return (value += product.price * quantity);
-          }
+        const products = await tx.orderProduct.findMany({
+          where: {
+            orderId: params.id,
+          },
+          select: {
+            optionId: true,
+            price: true,
+          },
+        });
 
-          return value;
+        const price = products.reduce((value, product) => {
+          return (value += product.price);
         }, 0);
 
         const cart = await tx.order.update({
           where: {
+            store,
             id: params.id,
           },
           data: {
@@ -162,8 +150,15 @@ export async function POST(
           include: {
             products: {
               select: {
-                product: true,
+                price: true,
                 quantity: true,
+                option: true,
+                product: {
+                  include: {
+                    collections: true,
+                    images: true,
+                  },
+                },
               },
             },
           },
@@ -186,7 +181,9 @@ export async function POST(
       },
     );
 
-    return NextResponse.json({ cart: transformOrderResponse(cart) });
+    return NextResponse.json({
+      cart: transformOrderResponse(cart),
+    });
   } catch (error) {
     return ApiError(error as RaiseApiError);
   }

@@ -24,8 +24,15 @@ export async function GET(request: Request, { params }: Params) {
     include: {
       products: {
         select: {
-          product: true,
+          price: true,
           quantity: true,
+          option: true,
+          product: {
+            include: {
+              collections: true,
+              images: true,
+            },
+          },
         },
       },
       address: true,

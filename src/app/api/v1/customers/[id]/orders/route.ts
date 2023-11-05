@@ -4,12 +4,7 @@ import { ApiCors } from "~/lib/api/cors";
 import { ApiError, ApiErrorFromSchema, RaiseApiError } from "~/lib/api/errors";
 import { transformOrderResponse } from "~/lib/api/transforms";
 import { db } from "~/lib/database";
-import EmailOrderCustomer from "~/components/emails/order-customer";
-import { formatter } from "~/lib/utils";
-import { intlFormat } from "date-fns";
-import { type OrderStatus } from "@prisma/client";
-import EmailOrderStore from "~/components/emails/order-store";
-import { resend } from "~/lib/resend";
+import { type ProductOption } from "@prisma/client";
 
 export function OPTIONS() {
   return ApiCors();
@@ -37,8 +32,15 @@ export async function GET(request: Request, { params }: Params) {
     include: {
       products: {
         select: {
-          product: true,
+          price: true,
           quantity: true,
+          option: true,
+          product: {
+            include: {
+              collections: true,
+              images: true,
+            },
+          },
         },
       },
       address: true,
@@ -87,15 +89,6 @@ const createOrderSchema = z.object({
 
 const orderSchema = z.union([updateOrderSchema, createOrderSchema]);
 
-function getOrderStatus(status: OrderStatus) {
-  switch (status) {
-    case "CREATED":
-      return `Aguardando Pagamento.`;
-    default:
-      break;
-  }
-}
-
 export async function POST(request: Request, { params }: Params) {
   const store = String(request.headers.get("X-Store-ID"));
   const payload = orderSchema.safeParse(await request.json());
@@ -105,88 +98,68 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   try {
-    let price = 0;
-    let products: { id: string; quantity: number; price: number }[] = [];
+    const { data } = payload;
+    const isNotUsingCartId =
+      !data.id && data.products && data.products?.length > 0;
 
-    if (
-      !payload.data.id &&
-      payload.data.products &&
-      payload.data.products.length > 0
-    ) {
-      const results = payload.data.products.map(async (requested) => {
-        const result = await db.product.findFirst({
+    let price = 0;
+    let products: ProductOption[] = [];
+
+    if (isNotUsingCartId) {
+      const requested = data.products.map(async ({ id, quantity }) => {
+        const product = await db.productOption.findFirst({
           where: {
+            id,
             store,
-            status: "ACTIVE",
-            deletedAt: null,
-            id: requested.id,
-            quantity: {
-              gte: requested.quantity,
+            quantity: { gte: quantity },
+            product: {
+              status: "ACTIVE",
+              deletedAt: null,
             },
-          },
-          select: {
-            id: true,
-            quantity: true,
-            price: true,
           },
         });
 
-        if (!result) {
+        if (!product) {
           return null;
         }
 
         return {
-          ...result,
-          quantity: requested.quantity,
-          price: requested.quantity * (result.price ?? 0),
+          ...product,
+          quantity,
+          price: quantity * Number(product.price ?? 0),
         };
       });
 
-      products = (await Promise.all(results)).filter(Boolean);
+      products = (await Promise.all(requested)).filter(Boolean);
 
-      if (!products.length) {
+      if (products.length <= 0) {
         throw new RaiseApiError({
           code: "INSUFFICIENT_PRODUCTS",
-          error: `The requested quantity is not available`,
           status: 422,
+          error: `The requested quantity is not available.`,
         });
       }
 
-      payload.data.products.map(async (product) => {
-        await db.product.update({
+      products.map(async (product) => {
+        await db.productOption.update({
           where: {
             id: product.id,
           },
           data: {
             quantity: {
-              decrement: product.quantity,
+              decrement: product.quantity ?? 0,
             },
+            updatedAt: new Date(),
           },
         });
       });
 
       price = products.reduce((value, product) => {
-        if (product.price) {
-          return (value += product.price);
-        }
-
-        return value;
+        return (value += Number(product.price ?? 0));
       }, 0);
     }
 
     let order = await db.order.upsert({
-      where: {
-        id: payload.data.id ?? "",
-      },
-      update: {
-        updatedAt: new Date(),
-        status: "CREATED",
-        customer: {
-          connect: {
-            id: params.id,
-          },
-        },
-      },
       create: {
         store,
         price,
@@ -199,49 +172,76 @@ export async function POST(request: Request, { params }: Params) {
         products: {
           createMany: {
             data: products.map((product) => ({
-              productId: product.id,
-              quantity: product.quantity,
+              optionId: product.id,
+              price: product.price ?? 0,
+              quantity: product.quantity ?? 0,
+              productId: product.productId,
             })),
           },
         },
       },
+      update: {
+        updatedAt: new Date(),
+        status: "CREATED",
+        customer: {
+          connect: {
+            id: params.id,
+          },
+        },
+      },
+      where: {
+        store,
+        id: String(data.id),
+      },
       include: {
         products: {
           select: {
-            product: true,
+            price: true,
             quantity: true,
+            option: true,
+            product: {
+              include: {
+                collections: true,
+                images: true,
+              },
+            },
           },
         },
-        address: true,
-        customer: true,
       },
     });
 
-    if (payload.data.address) {
+    if (data.address) {
       order = await db.order.update({
         where: {
+          store,
           id: order.id,
         },
         data: {
           address: {
             connect: {
-              id: payload.data.address,
+              id: data.address,
             },
           },
         },
         include: {
           products: {
             select: {
-              product: true,
+              price: true,
               quantity: true,
+              option: true,
+              product: {
+                include: {
+                  collections: true,
+                  images: true,
+                },
+              },
             },
           },
-          address: true,
-          customer: true,
         },
       });
     }
 
+    // @TODO create queue for send emails to customer and to store.
     if (order) {
       await db.event.create({
         data: {
@@ -251,69 +251,6 @@ export async function POST(request: Request, { params }: Params) {
           store,
         },
       });
-
-      const company = await db.store.findFirst({
-        where: {
-          store,
-        },
-        include: {
-          emails: true,
-        },
-      });
-
-      if (company) {
-        await resend.emails.send({
-          from: `${company.name} <pedidos@lojinha.dev>`,
-          to: [order.customer?.email ?? ""],
-          subject: "Pedido Confirmado!",
-          react: EmailOrderCustomer({
-            store: company?.name ?? "",
-            order: {
-              id: order.id,
-              price: formatter.currency(order.price ?? 0),
-              status: getOrderStatus(order.status) ?? "",
-              address: `${order.address?.street}, ${order.address?.number}, ${order.address?.neightborhood} - ${order.address?.city}, ${order.address?.state} - CEP: ${order.address?.zipcode} (${order.address?.complement})`,
-              date: intlFormat(
-                order.createdAt,
-                {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                },
-                { locale: "pt-BR" },
-              ),
-            },
-          }),
-        });
-
-        await resend.emails.send({
-          from: `lojinha.dev <pedidos@lojinha.dev>`,
-          to: company.emails.map(({ address }) => address),
-          subject: "Novo pedido na sua loja!",
-          react: EmailOrderStore({
-            store: company?.name ?? "",
-            order: {
-              id: order.id,
-              price: formatter.currency(order.price ?? 0),
-              status: getOrderStatus(order.status) ?? "",
-              customer: {
-                email: order.customer?.email ?? "",
-                id: order.customer?.id ?? "",
-              },
-              address: `${order.address?.street}, ${order.address?.number}, ${order.address?.neightborhood} - ${order.address?.city}, ${order.address?.state} - CEP: ${order.address?.zipcode} (${order.address?.complement})`,
-              date: intlFormat(
-                order.createdAt,
-                {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                },
-                { locale: "pt-BR" },
-              ),
-            },
-          }),
-        });
-      }
     }
 
     return NextResponse.json(

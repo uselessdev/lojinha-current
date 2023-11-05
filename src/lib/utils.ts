@@ -29,4 +29,12 @@ export const formatter = {
 
     return intl.format(date);
   },
+
+  priceToNumberOrUndefined: (price?: string) => {
+    if (!price) {
+      return undefined;
+    }
+
+    return formatter.number(price);
+  },
 };

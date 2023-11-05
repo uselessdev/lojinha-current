@@ -11,16 +11,29 @@ export const productSchema = z.object({
   description: z.string().optional(),
   price: z.string().optional(),
   originalPrice: z.string().optional(),
-  quantity: z.number().optional().default(1),
+  quantity: z.number().optional().default(0),
   sku: z.string().optional(),
+  variants: z
+    .array(
+      z.object({
+        id: z.string().uuid().optional(),
+        name: z.string(),
+        values: z.array(z.string()).default([]),
+      }),
+    )
+    .default([]),
+  options: z
+    .array(
+      z.object({
+        id: z.string().uuid().optional(),
+        name: z.string(),
+        price: z.string().optional().default("R$ 0,00"),
+        originalPrice: z.string().optional().default("R$ 0,00"),
+        quantity: z.number().optional().default(0),
+        sku: z.string().optional(),
+      }),
+    )
+    .default([]),
 });
 
 export type ProductSchema = z.infer<typeof productSchema>;
-
-export const schema = z.object({
-  id: z.string().uuid("ID do produto é inválido"),
-  user: z.string().min(1, "ID do usuário é inválido"),
-  store: z.string().min(1, "ID da loja é inválido"),
-});
-
-export type Schema = z.infer<typeof schema>;

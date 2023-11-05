@@ -45,6 +45,7 @@ model Event {
   store     String?
   createdAt DateTime     @default(now()) @map("created_at")
 
+  @@index([action])
   @@map("events")
 }
 
@@ -64,6 +65,8 @@ model Collection {
   updatedAt DateTime? @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@unique([store, slug])
+  @@index([slug])
   @@map("collections")
 }
 
@@ -75,26 +78,60 @@ enum ProductStatus {
 }
 
 model Product {
-  id            String        @id @default(uuid())
-  store         String
-  status        ProductStatus @default(DRAFT)
-  name          String
-  slug          String
-  description   String?       @db.Text
-  price         Int?
-  originalPrice Int?          @map("original_price")
-  quantity      Int?
-  sku           String?
+  id          String        @id @default(uuid())
+  store       String
+  status      ProductStatus @default(DRAFT)
+  name        String
+  slug        String
+  description String?       @db.Text
 
   collections Collection[]
   orders      OrderProduct[]
   images      Image[]
+  variants    ProductVariants[]
+  options     ProductOption[]
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
   @@map("products")
+}
+
+model ProductVariants {
+  id        String   @id @default(uuid())
+  store     String
+  productId String   @map("product_id")
+  name      String
+  values    String[]
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("product_variants")
+}
+
+model ProductOption {
+  id            String  @id @default(uuid())
+  productId     String  @map("product_id")
+  store         String
+  name          String
+  price         Int?
+  originalPrice Int?
+  quantity      Int?
+  sku           String?
+
+  product Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order   OrderProduct[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("product_options")
 }
 
 enum OrderStatus {
@@ -131,13 +168,16 @@ model Order {
 
 model OrderProduct {
   productId String @map("product_id")
+  optionId  String @map("option_id")
   orderId   String @map("order_id")
   quantity  Int
+  price     Int
 
-  product Product @relation(fields: [productId], references: [id])
-  order   Order   @relation(fields: [orderId], references: [id])
+  option  ProductOption @relation(fields: [optionId], references: [id], onDelete: SetDefault)
+  product Product       @relation(fields: [productId], references: [id])
+  order   Order         @relation(fields: [orderId], references: [id])
 
-  @@id([productId, orderId])
+  @@id([productId, orderId, optionId])
   @@map("order_product")
 }
 
@@ -186,7 +226,7 @@ model Email {
   store   String
   address String @unique
 
-  storeId Store @relation(fields: [store], references: [id])
+  storeId Store @relation(fields: [store], references: [store])
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @map("updated_at")
@@ -198,7 +238,7 @@ model Email {
 
 model Store {
   id     String  @id @default(uuid())
-  store  String
+  store  String  @unique
   name   String
   url    String
   emails Email[]
@@ -208,7 +248,7 @@ model Store {
   updatedAt DateTime? @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  @@index([store])
+  @@index([store, cnpj])
   @@map("stores")
 }
 
@@ -231,5 +271,6 @@ model Webhook {
   store String
   sid   String
 
+  @@index([store])
   @@map("webhooks")
 }

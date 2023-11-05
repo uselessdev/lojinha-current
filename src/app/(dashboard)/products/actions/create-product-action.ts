@@ -9,20 +9,78 @@ import { revalidatePath } from "next/cache";
 
 export const createProductAction = createServerAction({
   schema: productSchema,
-  handler: async ({ collections, price, originalPrice, ...payload }, ctx) => {
+  handler: async (
+    {
+      collections,
+      price,
+      originalPrice,
+      variants,
+      options,
+      sku,
+      quantity,
+      ...payload
+    },
+    ctx,
+  ) => {
     try {
       const product = await db.$transaction(async (tx) => {
         const product = await tx.product.create({
           data: {
             ...payload,
-            price: formatter.number(price ?? ""),
-            originalPrice: formatter.number(originalPrice ?? ""),
             store: ctx.store,
             collections: {
               connect: collections?.map((id) => ({ id })),
             },
           },
         });
+
+        if (!variants?.length) {
+          await tx.productVariants.create({
+            data: {
+              name: "default",
+              store: ctx.store,
+              values: ["default"],
+              productId: product.id,
+            },
+          });
+
+          await tx.productOption.create({
+            data: {
+              name: "default",
+              store: ctx.store,
+              price: formatter.number(price ?? ""),
+              originalPrice: formatter.number(originalPrice ?? ""),
+              sku: sku,
+              productId: product.id,
+              quantity: quantity,
+            },
+          });
+        }
+
+        if (variants && variants?.length > 0) {
+          await tx.productVariants.createMany({
+            data: variants?.map((variant) => ({
+              name: variant.name,
+              values: variant.values ?? [],
+              productId: product.id,
+              store: ctx.store,
+            })),
+          });
+        }
+
+        if (options && options.length > 0) {
+          await tx.productOption.createMany({
+            data: options.map((option) => ({
+              name: option.name,
+              productId: product.id,
+              store: ctx.store,
+              price: formatter.number(option.price ?? ""),
+              originalPrice: formatter.number(option.originalPrice ?? ""),
+              quantity: option.quantity,
+              sku: option.sku,
+            })),
+          });
+        }
 
         await tx.event.create({
           data: {
@@ -47,6 +105,7 @@ export const createProductAction = createServerAction({
 
       return { success: true, data: product };
     } catch (error) {
+      console.log(error);
       return { success: false, error: (error as Error).message };
     }
   },

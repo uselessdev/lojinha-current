@@ -12,7 +12,7 @@ type Props = {
 export default async function OrdersPage({ params }: Props) {
   const { orgId } = auth();
 
-  const results = await db.order.findMany({
+  const orders = await db.order.findMany({
     where: {
       store: String(orgId),
       customerId: params.id,
@@ -21,27 +21,23 @@ export default async function OrdersPage({ params }: Props) {
       },
     },
     include: {
-      customer: true,
-      address: true,
       products: {
         select: {
+          price: true,
           quantity: true,
-          product: true,
+          option: true,
+          product: {
+            include: {
+              collections: true,
+              images: true,
+              variants: true,
+            },
+          },
         },
       },
+      customer: true,
     },
   });
-
-  const orders = results.map((order) => ({
-    ...order,
-    products: order.products.map(({ product, quantity }) => ({
-      ...product,
-      order: {
-        quantity,
-        price: Number(product.price ?? 0) * quantity,
-      },
-    })),
-  }));
 
   return (
     <Card>
