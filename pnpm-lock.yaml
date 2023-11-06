@@ -138,8 +138,8 @@ dependencies:
     specifier: ^1.13.0
     version: 1.13.0
   svix-react:
-    specifier: ^1.8.2
-    version: 1.8.2(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)(svix@1.13.0)
+    specifier: ^1.8.3
+    version: 1.8.3(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)(svix@1.13.0)
   tailwind-merge:
     specifier: ^2.0.0
     version: 2.0.0
@@ -5388,8 +5388,8 @@ packages:
       - encoding
     dev: false
 
-  /svix-react@1.8.2(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)(svix@1.13.0):
-    resolution: {integrity: sha512-OZt4VPHhihMuxCE+v8+rpBmuS2J5cTEBob6mMNbMHHHKWOfmUh36rOd55BwIbkqvvNiRN6CA3ebPt/0aVSZzrA==}
+  /svix-react@1.8.3(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)(svix@1.13.0):
+    resolution: {integrity: sha512-S/9rzcd92V7lTeENdTzo5plEWOvBhyro9Lf5KugUc3z2uFW0sLCWLQRGDZDpZBpWHylQRMUjWgh+4eoS6s6qjQ==}
     peerDependencies:
       react: '>=17'
       react-dom: '>=17'
