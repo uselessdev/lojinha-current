@@ -1,9 +1,8 @@
 "use client";
 
-// @ts-expect-error types are missing
 import { AppPortal } from "svix-react";
-import "svix-react/style.css";
 import { Card } from "~/components/ui/card";
+import "svix-react/style.css";
 
 type Props = {
   url: string;

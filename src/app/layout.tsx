@@ -1,9 +1,20 @@
 import "~/app/globals.css";
 import { ptBR } from "@clerk/localizations";
 import { ClerkProvider } from "@clerk/nextjs";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "~/components/theme-provider";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#fefefe" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: {
@@ -28,10 +39,6 @@ export const metadata: Metadata = {
     },
   ],
   manifest: "/site.webmanifest",
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-    { media: "(prefers-color-scheme: light)", color: "#fefefe" },
-  ],
 };
 
 export default function RootLayout({
@@ -48,7 +55,7 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="pt-BR" className="light" style={{ colorScheme: "light" }}>
+      <html lang="pt-BR" className="light">
         <body>
           <ThemeProvider
             attribute="class"

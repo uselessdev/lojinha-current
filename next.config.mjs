@@ -4,7 +4,6 @@ import "./src/env.mjs";
 
 const nextConfig = {
   experimental: {
-    serverActions: true,
     typedRoutes: true,
   },
   images: {
