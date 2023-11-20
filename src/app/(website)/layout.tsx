@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Logo } from "~/components/logo";
 import { ThemeToggle } from "~/components/theme-toggle";
-import { Signin } from "./components/sign";
 
 export default function WebsiteLayout({
   children,
@@ -14,15 +13,15 @@ export default function WebsiteLayout({
         <Logo className="h-10 w-10" aria-label="lojinha.dev" />
 
         <nav className="flex items-center gap-3">
-          <a
+          {/* <a
             target="_blank"
             className="text-sm font-medium outline-none hover:text-zinc-500 focus:text-zinc-500"
             href="https://docs.lojinha.dev"
           >
             Documentação
-          </a>
+          </a> */}
 
-          <Signin />
+          {/* <Signin /> */}
         </nav>
       </header>
 
